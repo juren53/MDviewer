@@ -13,6 +13,15 @@ def main():
     app.setApplicationVersion("0.0.2")
     app.setOrganizationName("MDviewer")
 
+    # Apply Fusion style for consistent theming
+    app.setStyle("Fusion")
+
+    # Apply dark theme palette during initialization
+    from viewer.main_window import ThemeManager
+
+    palette = ThemeManager.get_fusion_dark_palette()
+    app.setPalette(palette)
+
     # High DPI support is enabled by default in PyQt6
 
     # Check if a file path was provided as a command line argument

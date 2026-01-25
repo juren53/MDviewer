@@ -5,7 +5,31 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.3] - 2026-01-24
+## [0.0.3] - 2026-01-25 0525 CST
+
+### Added
+- **Theme Selection System** - Complete user-accessible theming controls
+  - View → Theme submenu with Dark/Light theme options
+  - Ctrl+T keyboard shortcut for quick theme toggling
+  - Theme persistence across application sessions
+  - Visual feedback via menu check marks and status bar messages
+  - Immediate theme switching without application restart
+  - Professional Fusion-based theming system fully unlocked
+- **Enhanced User Experience**
+  - Theme-aware search highlighting (gold for dark, blue for light)
+  - Theme-aware markdown rendering with GitHub-style CSS
+  - Complete document reload on theme change for full visual refresh
+  - Settings integration using QSettings for theme persistence
+
+### Technical
+- Leverages existing ThemeManager infrastructure (0 new dependencies)
+- Enhanced MainWindow with theme switching methods
+- Integration with existing Fusion styling system
+- Zero architectural changes - pure feature enhancement
+
+---
+
+## [0.0.2b] - 2026-01-24 2030 CST
 
 ### Added
 - Linux desktop integration

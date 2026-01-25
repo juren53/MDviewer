@@ -12,6 +12,8 @@ A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
 - **Session restore**: Opens last viewed file on startup
 - **Command-line support**: Load files directly from terminal
 - **Quick reference dialog**: Keyboard shortcuts and markdown syntax
+- **Theme selection system**: Dark/Light themes with Ctrl+T toggle
+- **Theme persistence**: Saves theme preference across sessions
 - **Optimized for small files** (<1MB) with fast loading
 
 ## Requirements
@@ -31,7 +33,7 @@ A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
 
 ## Version
 
-**v0.0.2 2026-01-24 2030 CST**
+**v0.0.3 2026-01-25 0525 CST**
 
 ## Usage
 

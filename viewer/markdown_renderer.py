@@ -29,7 +29,7 @@ class CodeBlockProcessor(markdown.treeprocessors.Treeprocessor):
 class MarkdownRenderer:
     """Handles markdown to HTML conversion with GitHub-style formatting."""
 
-    def __init__(self):
+    def __init__(self, theme="dark"):
         # Set up markdown extensions
         self.extensions = [
             "markdown.extensions.tables",
@@ -39,6 +39,9 @@ class MarkdownRenderer:
             "markdown.extensions.nl2br",
             "markdown.extensions.attr_list",
         ]
+
+        # Current theme
+        self.current_theme = theme
 
         # Configure code highlighting
         self.extension_configs = {
@@ -56,74 +59,116 @@ class MarkdownRenderer:
             extensions=self.extensions, extension_configs=self.extension_configs
         )
 
+    def get_theme_css(self, theme):
+        """Get theme-specific CSS"""
+        if theme == "dark":
+            return """
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 1.5;
+                    word-wrap: break-word;
+                    color: #c9d1d9;
+                    background-color: #0d1117;
+                    margin: 0;
+                    padding: 20px;
+                }
+                
+                .markdown-body {
+                    max-width: 980px;
+                    margin: 0 auto;
+                }
+                
+                .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+                    color: #58a6ff;
+                    border-bottom: 1px solid #30363d;
+                    padding-bottom: 0.3em;
+                }
+                
+                .markdown-body table th, .markdown-body table td {
+                    padding: 6px 13px;
+                    border: 1px solid #30363d;
+                }
+                
+                .markdown-body table th {
+                    font-weight: 600;
+                    background-color: #161b22;
+                }
+                
+                .markdown-body table tr:nth-child(2n) {
+                    background-color: #0d1117;
+                }
+                
+                .markdown-body hr {
+                    height: 0.25em;
+                    padding: 0;
+                    border: 0;
+                    background-color: #30363d;
+                }
+            """
+        else:  # light theme
+            return """
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                    font-size: 16px;
+                    line-height: 1.5;
+                    word-wrap: break-word;
+                    color: #24292e;
+                    background-color: #ffffff;
+                    margin: 0;
+                    padding: 20px;
+                }
+                
+                .markdown-body {
+                    max-width: 980px;
+                    margin: 0 auto;
+                }
+                
+                .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+                    color: #0366d8;
+                    border-bottom: 1px solid #e1e4e8;
+                    padding-bottom: 0.3em;
+                }
+                
+                .markdown-body table th, .markdown-body table td {
+                    padding: 6px 13px;
+                    border: 1px solid #d0d7de;
+                }
+                
+                .markdown-body table th {
+                    font-weight: 600;
+                    background-color: #f6f8fa;
+                }
+                
+                .markdown-body table tr:nth-child(2n) {
+                    background-color: #f8f9fa;
+                }
+                
+                .markdown-body hr {
+                    height: 0.25em;
+                    padding: 0;
+                    border: 0;
+                    background-color: #e1e4e8;
+                }
+            """
+
     def render(self, text):
-        """Convert markdown text to HTML with GitHub-style formatting."""
-
-        # Convert markdown to HTML
-        html = self.md.convert(text)
-
-        # Apply syntax highlighting to code blocks
-        html = self._highlight_code_blocks(html)
-
-        # Wrap with GitHub CSS styling
-        html = self._wrap_with_github_styling(html)
-
-        return html
-
-    def _highlight_code_blocks(self, html):
-        """Add Pygments syntax highlighting to code blocks."""
-
-        def highlight_block(match):
-            language = match.group(1) or "text"
-            code = match.group(2)
-
-            try:
-                if language == "text":
-                    lexer = get_lexer_by_name("text")
-                else:
-                    lexer = get_lexer_by_name(language)
-            except:
-                lexer = get_lexer_by_name("text")
-
-            formatter = HtmlFormatter(
-                style="github", cssclass="highlight", linenos=False, noclasses=True
-            )
-
-            highlighted = highlight(code, lexer, formatter)
-            return f'<div class="highlight">{highlighted}</div>'
-
-        # Process fenced code blocks
-        pattern = r'<pre><code class="language-(\w+)">(.*?)</code></pre>'
-        html = re.sub(pattern, highlight_block, html, flags=re.DOTALL)
-
-        # Process plain code blocks
-        pattern = r"<pre><code>(.*?)</code></pre>"
-        html = re.sub(
-            pattern, lambda m: highlight_block(("", m.group(1))), html, flags=re.DOTALL
+        """Convert markdown text to HTML with theme-aware formatting."""
+        md = markdown.Markdown(
+            extensions=self.extensions, extension_configs=self.extension_configs
         )
 
-        return html
+        html = md.convert(text)
 
-    def _wrap_with_github_styling(self, html):
-        """Wrap HTML content with GitHub-style CSS."""
-
-        css = self._get_github_css()
-
+        # Wrap in theme-specific CSS
+        theme_css = self.get_theme_css(self.current_theme)
         return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-            {css}
-            </style>
-        </head>
-        <body>
-            <div class="markdown-body">
-                {html}
-            </div>
-        </body>
-        </html>
+        <style>
+            {theme_css}
+        </style>
+        <div class="markdown-body">
+            {html}
+        </div>
         """
 
     def _get_github_css(self):
