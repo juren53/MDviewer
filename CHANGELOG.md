@@ -5,6 +5,33 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2026-01-25 1120 CST
+
+### Fixed
+- **Update Checker** - Resolved critical issues preventing update detection
+  - Fixed version number mismatch (corrected 0.3.0 to 0.0.3)
+  - Created GitHub Release tag (v0.0.3) for proper version tracking
+  - Fixed indentation error in main_window.py causing application crash
+  - Fixed update checker freezing due to Qt GUI operations from background thread
+  - Implemented proper Qt signal/slot mechanism for thread-safe communication
+  - Added 15-second timeout to prevent indefinite hanging
+  - Update checker now responds within 5 seconds as expected
+
+### Added
+- **AGENTS.md** - Comprehensive guide for Warp AI agents working in this repository
+  - Common development, testing, and build commands
+  - Architecture documentation including startup flow and theme system
+  - Version management and update system details
+  - Project-specific conventions and requirements
+
+### Technical
+- Introduced UpdateCheckSignals class for proper thread communication
+- All dialog operations now run on main GUI thread via signals
+- Enhanced error handling with debugging output
+- Improved reliability of GitHub release detection
+
+---
+
 ## [0.0.3] - 2026-01-25 0525 CST
 
 ### Added
