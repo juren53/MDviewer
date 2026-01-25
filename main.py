@@ -5,12 +5,13 @@ import os
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from viewer.main_window import MainWindow
+from version import get_semver, get_version_string
 
 
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("MDviewer")
-    app.setApplicationVersion("0.0.2")
+    app.setApplicationVersion(get_semver())
     app.setOrganizationName("MDviewer")
 
     # Apply Fusion style for consistent theming

@@ -42,6 +42,8 @@ class MarkdownRenderer:
 
         # Current theme
         self.current_theme = theme
+        # Paragraph marks state
+        self.hide_paragraph_marks = False
 
         # Configure code highlighting
         self.extension_configs = {
@@ -59,8 +61,10 @@ class MarkdownRenderer:
             extensions=self.extensions, extension_configs=self.extension_configs
         )
 
-    def get_theme_css(self, theme):
+    def get_theme_css(self, theme, hide_paragraph_marks=False):
         """Get theme-specific CSS"""
+        hide_marks_class = "paragraph-marks-hidden" if hide_paragraph_marks else ""
+
         if theme == "dark":
             return """
                 body {
@@ -104,6 +108,28 @@ class MarkdownRenderer:
                     padding: 0;
                     border: 0;
                     background-color: #30363d;
+                }
+                
+                .paragraph-mark {
+                    color: #8b949e;
+                    font-size: 0.8em;
+                    opacity: 0.6;
+                    margin-left: 4px;
+                    font-weight: normal;
+                    display: inline;
+                }
+
+                .headerlink {
+                    color: #8b949e;
+                    font-size: 0.8em;
+                    opacity: 0.6;
+                    margin-left: 4px;
+                    text-decoration: none;
+                }
+
+                .paragraph-marks-hidden .paragraph-mark,
+                .paragraph-marks-hidden .headerlink {
+                    display: none;
                 }
             """
         else:  # light theme
@@ -150,6 +176,28 @@ class MarkdownRenderer:
                     border: 0;
                     background-color: #e1e4e8;
                 }
+                
+                .paragraph-mark {
+                    color: #6a737d;
+                    font-size: 0.8em;
+                    opacity: 0.6;
+                    margin-left: 4px;
+                    font-weight: normal;
+                    display: inline;
+                }
+
+                .headerlink {
+                    color: #6a737d;
+                    font-size: 0.8em;
+                    opacity: 0.6;
+                    margin-left: 4px;
+                    text-decoration: none;
+                }
+
+                .paragraph-marks-hidden .paragraph-mark,
+                .paragraph-marks-hidden .headerlink {
+                    display: none;
+                }
             """
 
     def render(self, text):
@@ -160,16 +208,145 @@ class MarkdownRenderer:
 
         html = md.convert(text)
 
+        # Handle paragraph marks visibility
+        if self.hide_paragraph_marks:
+            # Remove headerlink (pilcrow) elements from HTML since CSS hiding
+            # doesn't work reliably in QTextBrowser
+            html = re.sub(r'<a[^>]*class="headerlink"[^>]*>.*?</a>', '', html)
+        else:
+            # Add paragraph marks (periods) when visible
+            html = self._add_paragraph_marks(html)
+
         # Wrap in theme-specific CSS
-        theme_css = self.get_theme_css(self.current_theme)
+        theme_css = self.get_theme_css(self.current_theme, self.hide_paragraph_marks)
+        hide_marks_class = "paragraph-marks-hidden" if self.hide_paragraph_marks else ""
         return f"""
         <style>
             {theme_css}
         </style>
-        <div class="markdown-body">
+        <div class="markdown-body {hide_marks_class}">
             {html}
         </div>
         """
+
+    def _add_paragraph_marks(self, html):
+        """Add paragraph marks (periods) to appropriate lines in HTML."""
+        import re
+
+        # Split HTML into lines
+        lines = html.split("\n")
+        processed_lines = []
+
+        # Track if we're inside code blocks
+        in_code_block = False
+        in_inline_code = False
+
+        for line in lines:
+            # Check for code block boundaries
+            if line.strip().startswith("<pre>") or "<pre" in line:
+                in_code_block = True
+            elif line.strip().startswith("</pre>") or "</pre>" in line:
+                in_code_block = False
+
+            # Skip processing if inside code blocks
+            if in_code_block:
+                processed_lines.append(line)
+                continue
+
+            # Check for inline code
+            if "<code>" in line and "</code>" in line:
+                # Count code tags to handle multiple inline codes
+                code_count = line.count("<code>")
+                if code_count % 2 == 1:
+                    in_inline_code = not in_inline_code
+
+            # Add paragraph marks to appropriate lines
+            if (
+                not in_inline_code
+                and not in_code_block
+                and self._should_have_paragraph_mark(line)
+            ):
+                line = self._add_period_to_line(line)
+
+            processed_lines.append(line)
+
+        return "\n".join(processed_lines)
+
+    def _should_have_paragraph_mark(self, line):
+        """Determine if a line should have a paragraph mark."""
+        # Skip empty lines
+        if not line.strip():
+            return False
+
+        # Skip lines that are just HTML tags without content
+        stripped = line.strip()
+        if (
+            stripped.startswith("<")
+            and stripped.endswith(">")
+            and not any(
+                tag in stripped for tag in ["<h", "<p>", "<div", "<ul", "<ol", "<li"]
+            )
+        ):
+            return False
+
+        # Headers (titles and sections)
+        if re.search(r"<h[1-6][^>]*>", line):
+            return True
+
+        # Paragraph tags
+        if re.search(r"<p[^>]*>", line):
+            return True
+
+        # List items
+        if re.search(r"<li[^>]*>", line):
+            return True
+
+        # Blockquotes
+        if re.search(r"<blockquote[^>]*>", line):
+            return True
+
+        return False
+
+    def _add_period_to_line(self, line):
+        """Add a period to the end of content in HTML line."""
+        # Find the closing of the last tag before the content ends
+        # We want to add the period after the text content but before the closing tag
+        # IMPORTANT: The period must be INSIDE the span so CSS can hide it
+
+        # For headers: add period after header text
+        header_match = re.search(r"(<h[1-6][^>]*>)(.*?)(</h[1-6]>)", line)
+        if header_match:
+            return f"{header_match.group(1)}{header_match.group(2)}<span class='paragraph-mark'>.</span>{header_match.group(3)}"
+
+        # For paragraphs: add period before closing p tag
+        paragraph_match = re.search(r"(<p[^>]*>)(.*?)(</p>)", line)
+        if paragraph_match:
+            return f"{paragraph_match.group(1)}{paragraph_match.group(2)}<span class='paragraph-mark'>.</span>{paragraph_match.group(3)}"
+
+        # For list items: add period before closing li tag
+        list_match = re.search(r"(<li[^>]*>)(.*?)(</li>)", line)
+        if list_match:
+            return f"{list_match.group(1)}{list_match.group(2)}<span class='paragraph-mark'>.</span>{list_match.group(3)}"
+
+        # For blockquotes: add period before closing blockquote tag
+        blockquote_match = re.search(r"(<blockquote[^>]*>)(.*?)(</blockquote>)", line)
+        if blockquote_match:
+            return f"{blockquote_match.group(1)}{blockquote_match.group(2)}<span class='paragraph-mark'>.</span>{blockquote_match.group(3)}"
+
+        # For other content, try to add period before the last closing tag
+        # This is a fallback for edge cases
+        if not line.strip().endswith("</"):
+            return line
+
+        # Find the last closing tag position
+        last_tag_pos = line.rfind("</")
+        if last_tag_pos > 0:
+            # Insert period before the last closing tag
+            before_tag = line[:last_tag_pos]
+            after_tag = line[last_tag_pos:]
+            return f"{before_tag}<span class='paragraph-mark'>.</span>{after_tag}"
+
+        return line
 
     def _get_github_css(self):
         """Get GitHub-style CSS for markdown rendering."""

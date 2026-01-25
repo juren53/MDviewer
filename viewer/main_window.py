@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QObject
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import (
     QAction,
@@ -33,6 +33,20 @@ from PyQt6.QtGui import (
     QTextDocument,
 )
 from .markdown_renderer import MarkdownRenderer
+from .update_dialogs import (
+    VersionCompareDialog,
+    UpToDateDialog,
+    UpdateProgressDialog,
+    UpdateResultDialog,
+    ErrorDialog,
+)
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from github_version_checker import GitHubVersionChecker
+from git_updater import GitUpdater
+from version import get_semver
 
 
 class AboutDialog(QDialog):
@@ -48,7 +62,9 @@ class AboutDialog(QDialog):
         title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        version_label = QLabel("v0.0.3 2026-01-25 0525 CST")
+        from version import get_version_string
+
+        version_label = QLabel(get_version_string())
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         desc_label = QLabel(
@@ -70,11 +86,46 @@ class AboutDialog(QDialog):
 
 
 class QuickReferenceDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, theme="dark"):
         super().__init__(parent)
         self.setWindowTitle("Quick Reference - MDviewer")
         self.setModal(True)
         self.setFixedSize(600, 500)
+
+        # Theme colors - match Fusion palette from ThemeManager
+        if theme == "dark":
+            bg_color = "#2d2d2d"      # Window color (45, 45, 45)
+            text_color = "#bbbbbb"    # Text color (187, 187, 187)
+            heading_color = "#6db3f2" # Softer blue for headings
+            border_color = "#444444"  # Subtle border
+            code_bg = "#1e1e1e"       # Base color (30, 30, 30)
+            btn_bg = "#3d3d3d"
+            btn_hover = "#4d4d4d"
+        else:  # light theme
+            bg_color = "#f0f0f0"      # Window color (240, 240, 240)
+            text_color = "#000000"    # Text color
+            heading_color = "#0366d8" # Blue for headings
+            border_color = "#cccccc"  # Subtle border
+            code_bg = "#e8e8e8"       # Slightly darker than background
+            btn_bg = "#e0e0e0"
+            btn_hover = "#d0d0d0"
+
+        # Style the dialog itself
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {bg_color};
+            }}
+            QPushButton {{
+                background-color: {btn_bg};
+                color: {text_color};
+                border: 1px solid {border_color};
+                padding: 8px 16px;
+                border-radius: 4px;
+            }}
+            QPushButton:hover {{
+                background-color: {btn_hover};
+            }}
+        """)
 
         layout = QVBoxLayout()
 
@@ -82,108 +133,96 @@ class QuickReferenceDialog(QDialog):
         text_browser = QTextBrowser()
         text_browser.setReadOnly(True)
         text_browser.setFont(QFont("Consolas", 10))
+        text_browser.setStyleSheet(f"background-color: {bg_color}; color: {text_color}; border: none;")
 
-        # Quick reference content
-        reference_content = """
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 20px; color: #24292e;">
-            <h1 style="color: #24292e; border-bottom: 1px solid #e1e4e8; padding-bottom: 0.3em;">MDviewer Quick Reference</h1>
-            
-            <h2 style="color: #24292e;">Keyboard Shortcuts</h2>
+        # Quick reference content - theme aware
+        reference_content = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 20px; color: {text_color}; background-color: {bg_color};">
+            <h1 style="color: {heading_color}; border-bottom: 1px solid {border_color}; padding-bottom: 0.3em;">MDviewer Quick Reference</h1>
+
+            <h2 style="color: {heading_color};">Keyboard Shortcuts</h2>
             <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold; width: 200px;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+F</kbd></td>
-                    <td style="padding: 8px;">Find text in document</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; width: 200px; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+O</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Open a markdown file</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold; width: 200px;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+O</kbd></td>
-                    <td style="padding: 8px;">Open a markdown file</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+F</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Find text in document</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+C</kbd></td>
-                    <td style="padding: 8px;">Copy selected text</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+C</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Copy selected text</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+A</kbd></td>
-                    <td style="padding: 8px;">Select all text</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+A</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Select all text</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl++</kbd></td>
-                    <td style="padding: 8px;">Zoom in</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+T</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Toggle dark/light theme</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+-</kbd></td>
-                    <td style="padding: 8px;">Zoom out</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+P</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Toggle paragraph marks</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+0</kbd></td>
-                    <td style="padding: 8px;">Reset zoom</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+U</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Check for updates</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">↑</kbd> / <kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">↓</kbd></td>
-                    <td style="padding: 8px;">Navigate to previous/next match</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl++</kbd> / <kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+-</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Zoom in / out</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Enter</kbd></td>
-                    <td style="padding: 8px;">Find next occurrence</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+0</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Reset zoom</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Esc</kbd></td>
-                    <td style="padding: 8px;">Close Find dialog</td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+Q</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Exit application</td>
                 </tr>
             </table>
 
-            <h2 style="color: #24292e;">Markdown Syntax</h2>
+            <h2 style="color: {heading_color};">Markdown Syntax</h2>
             <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold; width: 200px;">Headers</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;"># H1, ## H2, ### H3</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; width: 200px; color: {text_color};">Headers</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;"># H1, ## H2, ### H3</code></td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Bold</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">**text**</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};">Bold / Italic</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">**bold**</code> / <code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">*italic*</code></td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Italic</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">*text*</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};">Code</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">`inline`</code> or <code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">```block```</code></td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Code</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">`code`</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};">Link / Image</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">[text](url)</code> / <code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">![alt](url)</code></td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Code Block</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">```python<br>code<br>```</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};">Lists</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">- item</code> or <code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">1. item</code></td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Link</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">[text](url)</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};">Blockquote</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">&gt; quote</code></td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Image</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">![alt](url)</code></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">List</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">- item</code> or <code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">1. item</code></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Blockquote</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">> quote</code></td>
-                </tr>
-                <tr style="border-bottom: 1px solid #e1e4e8;">
-                    <td style="padding: 8px; font-weight: bold;">Table</td>
-                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">|col1|col2|</code></td>
+                <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};">Table</td>
+                    <td style="padding: 8px; color: {text_color};"><code style="background-color: {code_bg}; color: {text_color}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">| col1 | col2 |</code></td>
                 </tr>
             </table>
 
-            <h2 style="color: #24292e;">Features</h2>
-            <ul style="color: #24292e;">
+            <h2 style="color: {heading_color};">Features</h2>
+            <ul style="color: {text_color};">
                 <li>GitHub-style markdown rendering</li>
                 <li>Syntax highlighting for code blocks</li>
-                <li>Support for tables, headers, lists, and more</li>
+                <li>Dark and light theme support</li>
                 <li>Recent files tracking</li>
-                <li>Session restore (opens last viewed file)</li>
-                <li>Command-line file loading</li>
+                <li>Session restore</li>
             </ul>
         </div>
         """
@@ -291,11 +330,12 @@ class ThemeManager:
 class FindDialog(QDialog):
     """Simple Find dialog similar to Windows Notepad"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, theme="dark"):
         super().__init__(parent)
         self.setWindowTitle("Find")
         self.setModal(True)
         self.setFixedSize(350, 200)
+        self.theme = theme
 
         # Search state
         self.search_text = ""
@@ -312,48 +352,70 @@ class FindDialog(QDialog):
 
     def setup_ui(self):
         """Create the dialog UI components"""
+        # Theme colors
+        if self.theme == "dark":
+            bg_color = "#2d2d2d"
+            text_color = "#bbbbbb"
+            input_bg = "#1e1e1e"
+            border_color = "#444444"
+            btn_bg = "#3d3d3d"
+            btn_hover = "#4d4d4d"
+            counter_bg = "#3d3d00"
+            counter_border = "#5d5d00"
+        else:
+            bg_color = "#f0f0f0"
+            text_color = "#000000"
+            input_bg = "#ffffff"
+            border_color = "#cccccc"
+            btn_bg = "#e0e0e0"
+            btn_hover = "#d0d0d0"
+            counter_bg = "#fff3cd"
+            counter_border = "#ffeaa7"
+
+        # Apply dialog-level stylesheet
+        self.setStyleSheet(f"QDialog {{ background-color: {bg_color}; }}")
+
         layout = QVBoxLayout()
 
         # Find what label and input
         find_label = QLabel("Find what:")
-        find_label.setStyleSheet("font-weight: bold; color: #000;")
+        find_label.setStyleSheet(f"font-weight: bold; color: {text_color};")
 
         self.search_input = QLineEdit()
         self.search_input.setPlaceholderText("Enter search text...")
-        self.search_input.setStyleSheet("""
-            QLineEdit {
-                border: 2px solid #ccc;
+        self.search_input.setStyleSheet(f"""
+            QLineEdit {{
+                border: 2px solid {border_color};
                 border-radius: 4px;
                 padding: 6px 8px;
                 font-size: 12px;
-                background-color: #fff;
-                color: #000;
-            }
-            QLineEdit:focus {
+                background-color: {input_bg};
+                color: {text_color};
+            }}
+            QLineEdit:focus {{
                 border-color: #007acc;
-                outline: none;
-            }
+            }}
         """)
 
         # Search options
         self.case_checkbox = QCheckBox("Match case")
-        self.case_checkbox.setStyleSheet("""
-            QCheckBox {
+        self.case_checkbox.setStyleSheet(f"""
+            QCheckBox {{
                 spacing: 8px;
                 font-weight: bold;
-                color: #000;
-            }
-            QCheckBox::indicator {
+                color: {text_color};
+            }}
+            QCheckBox::indicator {{
                 width: 18px;
                 height: 18px;
-                border: 2px solid #666;
+                border: 2px solid {border_color};
                 border-radius: 4px;
-                background-color: #fff;
-            }
-            QCheckBox::indicator:checked {
+                background-color: {input_bg};
+            }}
+            QCheckBox::indicator:checked {{
                 background-color: #007acc;
                 border-color: #007acc;
-            }
+            }}
         """)
 
         self.whole_checkbox = QCheckBox("Whole word")
@@ -381,35 +443,31 @@ class FindDialog(QDialog):
         """)
 
         self.cancel_btn = QPushButton("Cancel")
-        self.cancel_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #f8f9fa;
-                color: #000;
-                border: 1px solid #ccc;
+        self.cancel_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {btn_bg};
+                color: {text_color};
+                border: 1px solid {border_color};
                 padding: 8px 16px;
                 border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #e9ecef;
-                border-color: #adb5bd;
-            }
-            QPushButton:pressed {
-                background-color: #dee2e6;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {btn_hover};
+            }}
         """)
 
         self.match_counter = QLabel("0/0 matches")
         self.match_counter.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.match_counter.setStyleSheet("""
-            QLabel {
-                color: #000;
-                background-color: #fff3cd;
-                border: 1px solid #ffeaa7;
+        self.match_counter.setStyleSheet(f"""
+            QLabel {{
+                color: {text_color};
+                background-color: {counter_bg};
+                border: 1px solid {counter_border};
                 border-radius: 4px;
                 padding: 4px 8px;
                 font-size: 11px;
                 font-weight: bold;
-            }
+            }}
         """)
 
         button_layout.addWidget(self.find_next_btn)
@@ -494,12 +552,15 @@ class FindDialog(QDialog):
 
         matches = []
         while True:
-            cursor = document.find(self.search_text, cursor, self.build_find_flags())
-            if cursor.isNull():
+            found_cursor = document.find(self.search_text, cursor, self.build_find_flags())
+            if found_cursor.isNull():
                 break
 
-            matches.append(cursor)
-            cursor.setPosition(cursor.selectionEnd())
+            # Store a copy of the cursor with its selection intact
+            matches.append(QTextCursor(found_cursor))
+            # Move search position past this match
+            cursor = found_cursor
+            cursor.setPosition(found_cursor.selectionEnd())
 
         self.matches = matches
         self.total_matches = len(matches)
@@ -547,44 +608,26 @@ class FindDialog(QDialog):
             selection = QTextEdit.ExtraSelection()
             selection.cursor = match
 
-            format = QTextCharFormat()
+            fmt = QTextCharFormat()
             if i == self.current_match_index:
                 # Current match: maximum visibility
-                format.setBackground(current_highlight)
-                format.setForeground(current_text)
-                format.setFontWeight(QFont.Weight.Bold)
-                format.setFontUnderline(True)
+                fmt.setBackground(current_highlight)
+                fmt.setForeground(current_text)
+                fmt.setFontWeight(QFont.Weight.Bold)
+                fmt.setFontUnderline(True)
             else:
                 # Other matches: clear but less prominent
-                format.setBackground(other_highlight)
-                format.setForeground(other_text)
+                fmt.setBackground(other_highlight)
+                fmt.setForeground(other_text)
 
+            selection.format = fmt  # Apply the format to the selection
             extra_selections.append(selection)
 
-        # Apply selections multiple times to override CSS
+        # Apply selections
         self.text_browser.setExtraSelections(extra_selections)
 
-        # Force immediate visual update
+        # Force visual update
         self.text_browser.viewport().update()
-        self.text_browser.update()
-
-        # Additional delayed update to ensure persistence
-        QTimer.singleShot(100, self.force_highlight_update)
-
-    def force_highlight_update(self):
-        """Force highlights to reapply"""
-        if hasattr(self, "matches") and self.matches:
-            # Reapply selections after CSS processing
-            self.highlight_all_matches()
-
-        # Delayed update to ensure CSS doesn't override
-        QTimer.singleShot(10, self.force_highlight_update)
-
-    def force_highlight_update(self):
-        """Force another update to ensure highlights are visible"""
-        print("DEBUG: Force updating highlights")
-        self.text_browser.viewport().update()
-        self.text_browser.update()
 
     def navigate_to_match(self, index):
         """Navigate to specific match and highlight it"""
@@ -623,6 +666,15 @@ class FindDialog(QDialog):
         super().closeEvent(event)
 
 
+class UpdateCheckSignals(QObject):
+    """Signals for communicating update check results from background thread"""
+
+    no_version_info = pyqtSignal()
+    up_to_date = pyqtSignal(str)  # current_version
+    update_available = pyqtSignal(object)  # check_result
+    check_error = pyqtSignal(str)  # error_message
+
+
 class MainWindow(QMainWindow):
     def __init__(self, initial_file=None):
         super().__init__()
@@ -635,6 +687,13 @@ class MainWindow(QMainWindow):
         self.current_theme = (
             "dark"  # Default theme (will be overwritten by load_theme_settings)
         )
+        self.hide_paragraph_marks = False  # Default: marks shown (unchecked = visible)
+
+        # Initialize update components
+        self.version_checker = GitHubVersionChecker("juren53/MDviewer", get_semver())
+        self.git_updater = GitUpdater(
+            "https://github.com/juren53/MDviewer.git", "version.py"
+        )
 
         self.setWindowTitle("MDviewer")
 
@@ -643,6 +702,9 @@ class MainWindow(QMainWindow):
 
         # Load theme from settings
         self.load_theme_settings()
+
+        # Load paragraph marks preference from settings
+        self.load_paragraph_marks_settings()
 
         # Load recent files from settings
         self.load_recent_files()
@@ -683,6 +745,7 @@ class MainWindow(QMainWindow):
 
         # Set theme in renderer
         self.renderer.current_theme = self.current_theme
+        self.renderer.hide_paragraph_marks = self.hide_paragraph_marks
 
         # Load file based on priority: command-line arg > last opened file > welcome message
         if self.initial_file:
@@ -798,6 +861,15 @@ class MainWindow(QMainWindow):
         toggle_theme_action.triggered.connect(self.toggle_theme)
         view_menu.addAction(toggle_theme_action)
 
+        # Hide paragraph marks action
+        hide_marks_action = QAction("Hide Paragraph Marks", self)
+        hide_marks_action.setShortcut("Ctrl+P")
+        hide_marks_action.setStatusTip("Show or hide paragraph marks at end of lines")
+        hide_marks_action.setCheckable(True)
+        hide_marks_action.setChecked(self.hide_paragraph_marks)
+        hide_marks_action.triggered.connect(self.toggle_paragraph_marks)
+        view_menu.addAction(hide_marks_action)
+
         # Help Menu
         help_menu = menubar.addMenu("&Help")
 
@@ -810,6 +882,12 @@ class MainWindow(QMainWindow):
         changelog_action.setStatusTip("View the changelog")
         changelog_action.triggered.connect(self.show_changelog)
         help_menu.addAction(changelog_action)
+
+        get_latest_action = QAction("Get Latest Version", self)
+        get_latest_action.setShortcut("Ctrl+U")
+        get_latest_action.setStatusTip("Check for and install latest version")
+        get_latest_action.triggered.connect(self._on_get_latest_updates)
+        help_menu.addAction(get_latest_action)
 
         help_menu.addSeparator()
 
@@ -824,7 +902,9 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Ready")
 
         # Add version label to the right side of status bar
-        version_label = QLabel("v0.0.3 2026-01-25 0525 CST")
+        from version import get_version_string
+
+        version_label = QLabel(get_version_string())
         version_label.setStyleSheet("color: #666; font-size: 11px;")
         self.status_bar.addPermanentWidget(version_label)
 
@@ -1067,6 +1147,8 @@ class MainWindow(QMainWindow):
 
         # Save current theme preference
         self.settings.setValue("current_theme", self.current_theme)
+        # Save paragraph marks preference
+        self.settings.setValue("hide_paragraph_marks", self.hide_paragraph_marks)
 
         # Save current file for restore on startup
         if self.current_file:
@@ -1074,7 +1156,7 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
     def show_quick_reference(self):
-        dialog = QuickReferenceDialog(self)
+        dialog = QuickReferenceDialog(self, theme=self.current_theme)
         dialog.exec()
 
     def show_changelog(self):
@@ -1147,6 +1229,28 @@ class MainWindow(QMainWindow):
             self.dark_theme_action.setChecked(self.current_theme == "dark")
             self.light_theme_action.setChecked(self.current_theme == "light")
 
+    def toggle_paragraph_marks(self):
+        """Toggle paragraph marks visibility"""
+        self.hide_paragraph_marks = not self.hide_paragraph_marks
+        self.renderer.hide_paragraph_marks = self.hide_paragraph_marks
+
+        # Update menu check state
+        for action in self.findChildren(QAction):
+            if action.text() == "Hide Paragraph Marks":
+                action.setChecked(self.hide_paragraph_marks)
+                break
+
+        # Reload current document to apply change
+        if self.current_file:
+            self.load_file_from_path(self.current_file)
+        else:
+            # Reload welcome message
+            self.show_welcome_message()
+
+        # Update status bar
+        state = "hidden" if self.hide_paragraph_marks else "shown"
+        self.status_bar.showMessage(f"Paragraph marks {state}", 2000)
+
     def load_theme_settings(self):
         """Load theme preference from settings"""
         saved_theme = self.settings.value("current_theme", "dark")
@@ -1154,20 +1258,274 @@ class MainWindow(QMainWindow):
         self.apply_theme(self.current_theme)
         self.renderer.current_theme = self.current_theme
 
+    def load_paragraph_marks_settings(self):
+        """Load paragraph marks preference from settings"""
+        saved_setting = self.settings.value("hide_paragraph_marks", False, type=bool)
+        self.hide_paragraph_marks = saved_setting
+
     def setup_find_dialog(self):
         """Create find dialog instance"""
-        self.find_dialog = FindDialog(self)
+        self.find_dialog = FindDialog(self, theme=self.current_theme)
         self.find_dialog.set_text_browser(self.text_browser)
 
     def show_find_dialog(self):
         """Show Find dialog"""
-        if not self.find_dialog:
+        # Recreate dialog if theme changed or doesn't exist
+        if not self.find_dialog or self.find_dialog.theme != self.current_theme:
             self.setup_find_dialog()
 
         # Position dialog relative to main window
         self.find_dialog.show()
         self.find_dialog.raise_()
         self.find_dialog.activateWindow()
+
+    def _on_get_latest_updates(self):
+        """Handler for 'Get Latest Version' menu action"""
+        # Show progress dialog
+        progress_dialog = UpdateProgressDialog(self)
+        progress_dialog.update_status("Checking repository status...")
+        progress_dialog.show()
+
+        # Add safety timeout (15 seconds)
+        QTimer.singleShot(15000, lambda: self._check_timeout(progress_dialog))
+
+        # Check if we're in a git repository
+        if not self.git_updater.is_git_repository():
+            progress_dialog.close()
+            error_dialog = ErrorDialog(
+                "MDviewer installation is not a git repository.\n\n"
+                "To enable automatic updates, please install MDviewer from git:\n"
+                "git clone https://github.com/juren53/MDviewer.git\n\n"
+                "Alternatively, you can download updates manually from:\n"
+                "https://github.com/juren53/MDviewer/releases",
+                self,
+            )
+            error_dialog.exec()
+            return
+
+        # Try GitHub releases first, then fallback to git-based checking
+        progress_dialog.update_status("Checking for updates...")
+
+        # Create signals object for thread communication
+        signals = UpdateCheckSignals()
+        signals.no_version_info.connect(
+            lambda: self._show_no_version_info_dialog(progress_dialog)
+        )
+        signals.up_to_date.connect(
+            lambda v: self._show_up_to_date_dialog(progress_dialog, v)
+        )
+        signals.update_available.connect(
+            lambda r: self._show_comparison_dialog(progress_dialog, r)
+        )
+        signals.check_error.connect(
+            lambda e: self._show_check_error(progress_dialog, e)
+        )
+
+        def check_for_updates():
+            try:
+                print("[DEBUG] Starting update check...")
+                # First try GitHub releases
+                from github_version_checker import VersionCheckResult
+
+                check_result = self.version_checker.get_latest_version()
+                print(
+                    f"[DEBUG] GitHub check result: error={check_result.error_message}, has_update={check_result.has_update}"
+                )
+
+                if check_result.error_message:
+                    # Fall back to git-based checking if GitHub releases fail
+                    print(f"GitHub releases check failed: {check_result.error_message}")
+                    print("Falling back to git-based version checking...")
+
+                    has_update, current_version, latest_version = (
+                        self.git_updater.get_update_info()
+                    )
+                    print(
+                        f"[DEBUG] Git check result: has_update={has_update}, current={current_version}, latest={latest_version}"
+                    )
+
+                    if not latest_version:
+                        print("[DEBUG] No version info - emitting signal")
+                        signals.no_version_info.emit()
+                        return
+
+                    if not has_update:
+                        print("[DEBUG] Up to date - emitting signal")
+                        current_version = (
+                            current_version or self.git_updater.get_current_version()
+                        )
+                        signals.up_to_date.emit(current_version)
+                        return
+
+                    print("[DEBUG] Update available - emitting signal")
+                    # Create check result for dialog
+                    check_result = VersionCheckResult()
+                    check_result.has_update = True
+                    check_result.current_version = current_version
+                    check_result.latest_version = latest_version
+                    check_result.release_notes = f"Update available via git repository:\n{current_version} → {latest_version}"
+                    signals.update_available.emit(check_result)
+
+                else:
+                    print("[DEBUG] GitHub check succeeded")
+                    # GitHub releases check succeeded
+                    if not check_result.has_update:
+                        print("[DEBUG] Up to date - emitting signal")
+                        signals.up_to_date.emit(check_result.current_version)
+                        return
+
+                    print("[DEBUG] Update available via GitHub - emitting signal")
+                    signals.update_available.emit(check_result)
+
+            except Exception as e:
+                print(f"[DEBUG] Exception occurred: {e}")
+                import traceback
+
+                traceback.print_exc()
+                signals.check_error.emit(str(e))
+
+        # Run update check in background thread to keep UI responsive
+        import threading
+
+        thread = threading.Thread(target=check_for_updates, daemon=True)
+        thread.start()
+
+    def _check_timeout(self, progress_dialog):
+        """Handle timeout if check takes too long"""
+        if progress_dialog.isVisible():
+            print("[DEBUG] Update check timed out")
+            progress_dialog.close()
+            error_dialog = ErrorDialog(
+                "Update check timed out.\n\n"
+                "This may be due to network issues.\n"
+                "Please check your internet connection and try again.",
+                self,
+            )
+            error_dialog.exec()
+
+    def _show_no_version_info_dialog(self, progress_dialog):
+        """Show dialog when no version information is available (runs on main thread)"""
+        progress_dialog.close()
+
+        info_dialog = QDialog(self)
+        info_dialog.setWindowTitle("Update Information")
+        info_dialog.setModal(True)
+        info_dialog.setFixedSize(450, 250)
+
+        layout = QVBoxLayout()
+        title_label = QLabel("Update Check")
+        title_label.setFont(QFont("Arial", 14, QFont.Weight.Bold))
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        info_text = QLabel(
+            "No version information available yet.\n\n"
+            "This is normal for new installations.\n\n"
+            "You are running the latest available version.\n\n"
+            "Future updates will be detected automatically."
+        )
+        info_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        info_text.setWordWrap(True)
+
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(info_dialog.accept)
+
+        layout.addWidget(title_label)
+        layout.addWidget(info_text)
+        layout.addWidget(ok_button)
+
+        info_dialog.setLayout(layout)
+        info_dialog.setStyleSheet("""
+            QDialog {
+                background-color: #0d1117;
+                color: #c9d1d9;
+            }
+            QLabel {
+                color: #c9d1d9;
+            }
+            QPushButton {
+                background-color: #238636;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                font-weight: bold;
+                border-radius: 4px;
+            }
+        """)
+
+        info_dialog.exec()
+
+    def _show_up_to_date_dialog(self, progress_dialog, current_version):
+        """Show up-to-date dialog (runs on main thread)"""
+        progress_dialog.close()
+        up_to_date_dialog = UpToDateDialog(current_version, self)
+        up_to_date_dialog.exec()
+
+    def _show_comparison_dialog(self, progress_dialog, check_result):
+        """Show version comparison dialog (runs on main thread)"""
+        progress_dialog.close()
+        comparison_dialog = VersionCompareDialog(check_result, self)
+
+        if (
+            comparison_dialog.exec() == QDialog.DialogCode.Accepted
+            and comparison_dialog.should_update
+        ):
+            # Perform update
+            self._perform_update()
+
+    def _show_check_error(self, progress_dialog, error_message):
+        """Show error dialog for update check failures (runs on main thread)"""
+        progress_dialog.close()
+        error_dialog = ErrorDialog(f"Error checking for updates: {error_message}", self)
+        error_dialog.exec()
+
+    def _perform_update(self):
+        """Perform the actual update process"""
+        progress_dialog = UpdateProgressDialog(self)
+        progress_dialog.update_status("Updating MDviewer...")
+        progress_dialog.show()
+
+        def update_in_background():
+            try:
+                update_result = self.git_updater.force_update()
+
+                # Update UI on main thread
+                QTimer.singleShot(
+                    100,
+                    lambda: self._show_update_result(update_result, progress_dialog),
+                )
+
+            except Exception as e:
+                QTimer.singleShot(
+                    100, lambda: self._show_update_error(str(e), progress_dialog)
+                )
+
+        # Run update in background thread
+        import threading
+
+        thread = threading.Thread(target=update_in_background, daemon=True)
+        thread.start()
+
+    def _show_update_result(self, update_result, progress_dialog):
+        """Show update result dialog"""
+        progress_dialog.close()
+
+        result_dialog = UpdateResultDialog(update_result, self)
+        result_dialog.exec()
+
+        # If update was successful, suggest restart
+        if update_result.success:
+            QMessageBox.information(
+                self,
+                "Restart Required",
+                "MDviewer has been successfully updated.\n\n"
+                "Please restart the application to use the new version.",
+            )
+
+    def _show_update_error(self, error_message, progress_dialog):
+        """Show update error dialog"""
+        progress_dialog.close()
+        error_dialog = ErrorDialog(f"Update failed: {error_message}", self)
+        error_dialog.exec()
 
     def show_about(self):
         dialog = AboutDialog(self)
