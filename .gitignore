@@ -174,3 +174,8 @@ Thumbs.db
 # Test outputs
 test_output.html
 tests/test_output.html
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec

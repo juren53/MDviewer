@@ -37,8 +37,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optimized for small files (<1MB) with fast loading
 - Cross-platform compatibility (Windows, Linux, macOS)
 
+### Added
+- Dark theme support throughout the application
+  - Dark background (#0d1117) with light text (#c9d1d9)
+  - VS Code-style syntax highlighting for code blocks
+  - Dark scrollbars and UI components
+  - Consistent dark theme across welcome screen and documents
+- Persistent window position and size settings
+  - Saves window geometry on close
+  - Restores window position and size on startup
+  - Uses QSettings for cross-platform persistence
+- Git repository initialization
+  - Complete version control setup
+  - Comprehensive .gitignore configuration
+  - Initial commit with all project files
+
 ### Project Structure
 - Modular architecture with separated concerns
 - Unit tests for markdown renderer
 - Comprehensive README documentation
 - Sample markdown file for testing features
+- Git repository with proper version control
