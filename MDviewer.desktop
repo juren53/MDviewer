@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=MDviewer
+GenericName=Markdown Viewer
+Comment=A simple markdown file viewer
+Exec=/usr/bin/python3 /home/juren/Projects/MDviewer/main.py %f
+Icon=/home/juren/Projects/MDviewer/assets/ICON_MDviewer.png
+Terminal=false
+Categories=Office;Viewer;TextTools;Utility;
+MimeType=text/markdown;text/x-markdown;
+StartupNotify=true
+StartupWMClass=MDviewer
+Keywords=markdown;md;viewer;document;
