@@ -35,7 +35,7 @@ class AboutDialog(QDialog):
         title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
         title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        version_label = QLabel("Version 0.0.1")
+        version_label = QLabel("v0.0.2 2026-01-24 2030 CST")
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         desc_label = QLabel(
@@ -56,13 +56,132 @@ class AboutDialog(QDialog):
         self.setLayout(layout)
 
 
+class QuickReferenceDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Quick Reference - MDviewer")
+        self.setModal(True)
+        self.setFixedSize(600, 500)
+
+        layout = QVBoxLayout()
+
+        # Create a text browser for the reference content
+        text_browser = QTextBrowser()
+        text_browser.setReadOnly(True)
+        text_browser.setFont(QFont("Consolas", 10))
+
+        # Quick reference content
+        reference_content = """
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 20px; color: #24292e;">
+            <h1 style="color: #24292e; border-bottom: 1px solid #e1e4e8; padding-bottom: 0.3em;">MDviewer Quick Reference</h1>
+            
+            <h2 style="color: #24292e;">Keyboard Shortcuts</h2>
+            <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold; width: 200px;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+O</kbd></td>
+                    <td style="padding: 8px;">Open a markdown file</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+C</kbd></td>
+                    <td style="padding: 8px;">Copy selected text</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+A</kbd></td>
+                    <td style="padding: 8px;">Select all text</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl++</kbd></td>
+                    <td style="padding: 8px;">Zoom in</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+-</kbd></td>
+                    <td style="padding: 8px;">Zoom out</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+0</kbd></td>
+                    <td style="padding: 8px;">Reset zoom</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;"><kbd style="background-color: #f6f8fa; padding: 2px 6px; border-radius: 3px; font-family: monospace;">Ctrl+Q</kbd></td>
+                    <td style="padding: 8px;">Exit application</td>
+                </tr>
+            </table>
+
+            <h2 style="color: #24292e;">Markdown Syntax</h2>
+            <table style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold; width: 200px;">Headers</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;"># H1, ## H2, ### H3</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Bold</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">**text**</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Italic</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">*text*</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Code</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">`code`</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Code Block</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">```python<br>code<br>```</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Link</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">[text](url)</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Image</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">![alt](url)</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">List</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">- item</code> or <code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">1. item</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Blockquote</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">> quote</code></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e1e4e8;">
+                    <td style="padding: 8px; font-weight: bold;">Table</td>
+                    <td style="padding: 8px;"><code style="background-color: #f6f8fa; padding: 2px 4px; border-radius: 3px; font-family: monospace;">|col1|col2|</code></td>
+                </tr>
+            </table>
+
+            <h2 style="color: #24292e;">Features</h2>
+            <ul style="color: #24292e;">
+                <li>GitHub-style markdown rendering</li>
+                <li>Syntax highlighting for code blocks</li>
+                <li>Support for tables, headers, lists, and more</li>
+                <li>Recent files tracking</li>
+                <li>Session restore (opens last viewed file)</li>
+                <li>Command-line file loading</li>
+            </ul>
+        </div>
+        """
+
+        text_browser.setHtml(reference_content)
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(self.accept)
+
+        layout.addWidget(text_browser)
+        layout.addWidget(close_button)
+
+        self.setLayout(layout)
+
+
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, initial_file=None):
         super().__init__()
         self.current_file = None
         self.renderer = MarkdownRenderer()
         self.settings = QSettings("MDviewer", "MDviewer")
         self.recent_files = []
+        self.initial_file = initial_file
 
         self.setWindowTitle("MDviewer")
 
@@ -106,8 +225,11 @@ class MainWindow(QMainWindow):
             }
         """)
 
-        # Load a welcome message
-        self.show_welcome_message()
+        # Load file based on priority: command-line arg > last opened file > welcome message
+        if self.initial_file:
+            self.load_file_from_path(self.initial_file)
+        else:
+            self.load_last_opened_file()
 
     def setup_ui(self):
         central_widget = QWidget()
@@ -184,6 +306,18 @@ class MainWindow(QMainWindow):
         # Help Menu
         help_menu = menubar.addMenu("&Help")
 
+        quick_ref_action = QAction("&Quick Reference", self)
+        quick_ref_action.setStatusTip("Show keyboard shortcuts and markdown syntax")
+        quick_ref_action.triggered.connect(self.show_quick_reference)
+        help_menu.addAction(quick_ref_action)
+
+        changelog_action = QAction("&Changelog", self)
+        changelog_action.setStatusTip("View the changelog")
+        changelog_action.triggered.connect(self.show_changelog)
+        help_menu.addAction(changelog_action)
+
+        help_menu.addSeparator()
+
         about_action = QAction("&About", self)
         about_action.setStatusTip("About MDviewer")
         about_action.triggered.connect(self.show_about)
@@ -195,9 +329,65 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage("Ready")
 
         # Add version label to the right side of status bar
-        version_label = QLabel("v0.0.1")
+        version_label = QLabel("v0.0.2 2026-01-24 2030 CST")
         version_label.setStyleSheet("color: #666; font-size: 11px;")
         self.status_bar.addPermanentWidget(version_label)
+
+    def load_file_from_path(self, file_path):
+        """Load a markdown file from the given path."""
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                # Render markdown to HTML
+                html_content = self.renderer.render(content)
+                self.text_browser.setHtml(html_content)
+
+                self.current_file = file_path
+                self.setWindowTitle(f"MDviewer - {os.path.basename(file_path)}")
+                self.status_bar.showMessage(f"Opened: {file_path}")
+
+                # Add to recent files
+                self.add_to_recent_files(file_path)
+                return True
+            except Exception as e:
+                # If loading fails, show error
+                self.status_bar.showMessage(f"Error loading {file_path}: {str(e)}")
+                QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
+                return False
+        else:
+            self.status_bar.showMessage(f"File not found: {file_path}")
+            QMessageBox.warning(
+                self, "File Not Found", f"The file {file_path} does not exist."
+            )
+            return False
+
+    def load_last_opened_file(self):
+        """Load the last opened file from settings."""
+        last_file = self.settings.value("last_opened_file")
+        if last_file and os.path.exists(last_file):
+            try:
+                with open(last_file, "r", encoding="utf-8") as f:
+                    content = f.read()
+
+                # Render markdown to HTML
+                html_content = self.renderer.render(content)
+                self.text_browser.setHtml(html_content)
+
+                self.current_file = last_file
+                self.setWindowTitle(f"MDviewer - {os.path.basename(last_file)}")
+                self.status_bar.showMessage(f"Restored: {last_file}")
+
+                # Add to recent files
+                self.add_to_recent_files(last_file)
+                return
+            except Exception as e:
+                # If loading fails, fall back to welcome message
+                pass
+
+        # Show welcome message if no last file or loading failed
+        self.show_welcome_message()
 
     def show_welcome_message(self):
         welcome_html = """
@@ -379,7 +569,25 @@ class MainWindow(QMainWindow):
         # Save window settings when closing
         self.save_window_settings()
         self.save_recent_files()
+        # Save current file for restore on startup
+        if self.current_file:
+            self.settings.setValue("last_opened_file", self.current_file)
         super().closeEvent(event)
+
+    def show_quick_reference(self):
+        dialog = QuickReferenceDialog(self)
+        dialog.exec()
+
+    def show_changelog(self):
+        changelog_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "CHANGELOG.md"
+        )
+        if os.path.exists(changelog_path):
+            self.load_file_from_path(changelog_path)
+        else:
+            QMessageBox.warning(
+                self, "File Not Found", f"Changelog file not found: {changelog_path}"
+            )
 
     def show_about(self):
         dialog = AboutDialog(self)

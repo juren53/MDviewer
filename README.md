@@ -9,6 +9,9 @@ A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
 - **Conventional menu system**: File, Edit, View, Help
 - **Recent files** support with persistent storage
 - **Zoom controls** for better readability
+- **Session restore**: Opens last viewed file on startup
+- **Command-line support**: Load files directly from terminal
+- **Quick reference dialog**: Keyboard shortcuts and markdown syntax
 - **Optimized for small files** (<1MB) with fast loading
 
 ## Requirements
@@ -26,11 +29,20 @@ A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
    pip install -r requirements.txt
    ```
 
+## Version
+
+**v0.0.2 2026-01-24 2030 CST**
+
 ## Usage
 
 Run the application:
 ```bash
 python main.py
+```
+
+Or open a file directly:
+```bash
+python main.py yourfile.md
 ```
 
 Or use it as a module:
@@ -55,6 +67,8 @@ python -m viewer.main_window
 - **Reset Zoom** (Ctrl+0): Reset font to default size
 
 ### Help
+- **Quick Reference**: Keyboard shortcuts and markdown syntax
+- **Changelog**: View version history and changes
 - **About**: Application information
 
 ## Supported Markdown Features

@@ -10,12 +10,20 @@ from viewer.main_window import MainWindow
 def main():
     app = QApplication(sys.argv)
     app.setApplicationName("MDviewer")
-    app.setApplicationVersion("1.0.0")
+    app.setApplicationVersion("0.0.2")
     app.setOrganizationName("MDviewer")
 
     # High DPI support is enabled by default in PyQt6
 
-    window = MainWindow()
+    # Check if a file path was provided as a command line argument
+    file_to_open = None
+    if len(sys.argv) > 1:
+        file_to_open = sys.argv[1]
+        # Convert relative paths to absolute
+        if not os.path.isabs(file_to_open):
+            file_to_open = os.path.abspath(file_to_open)
+
+    window = MainWindow(file_to_open)
     window.show()
 
     sys.exit(app.exec())
