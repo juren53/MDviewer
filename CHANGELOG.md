@@ -5,6 +5,26 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.3] - 2026-01-24
+
+### Added
+- Linux desktop integration
+  - Added MDviewer.desktop file for system menu integration
+  - Application appears in Office/Utilities menu category
+  - Supports file association with markdown files (.md)
+- Application icon (512x512 PNG) in assets directory
+
+---
+
+## [0.0.2] - 2026-01-24
+
+### Added
+- Session restore: reopens last viewed file on startup
+- CLI support: open files via command line argument
+- Quick Reference dialog (Help menu) with markdown syntax guide
+
+---
+
 ## [0.0.1] - 2025-01-24
 
 ### Added
