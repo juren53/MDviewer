@@ -1133,6 +1133,14 @@ class MainWindow(QMainWindow):
         self.update_recent_files_menu()
         self.save_recent_files()
 
+    def keyPressEvent(self, event):
+        """Handle keyboard shortcuts — 'b' pages backward (like less)."""
+        if event.key() == Qt.Key.Key_B and not event.modifiers():
+            scrollbar = self.text_browser.verticalScrollBar()
+            scrollbar.setValue(scrollbar.value() - self.text_browser.viewport().height())
+        else:
+            super().keyPressEvent(event)
+
     def closeEvent(self, event):
         """Handle window close event."""
         # Save window settings when closing
