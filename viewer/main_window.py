@@ -32,8 +32,9 @@ from PyQt6.QtGui import (
     QColor,
     QTextDocument,
 )
-from .markdown_renderer import MarkdownRenderer, DEFAULT_THEME_COLORS
+from .markdown_renderer import MarkdownRenderer
 from .color_settings_dialog import ColorSettingsDialog
+from .theme_manager import get_theme_registry
 from .update_dialogs import (
     VersionCompareDialog,
     UpToDateDialog,
@@ -69,7 +70,7 @@ class AboutDialog(QDialog):
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         desc_label = QLabel(
-            "A simple PyQt6 Markdown viewer with GitHub-style rendering"
+            "A PyQt6 Markdown viewer with GitHub-style rendering and multi-theme support"
         )
         desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         desc_label.setWordWrap(True)
@@ -95,19 +96,19 @@ class QuickReferenceDialog(QDialog):
 
         # Theme colors - match Fusion palette from ThemeManager
         if theme == "dark":
-            bg_color = "#2d2d2d"      # Window color (45, 45, 45)
-            text_color = "#bbbbbb"    # Text color (187, 187, 187)
-            heading_color = "#6db3f2" # Softer blue for headings
+            bg_color = "#2d2d2d"  # Window color (45, 45, 45)
+            text_color = "#bbbbbb"  # Text color (187, 187, 187)
+            heading_color = "#6db3f2"  # Softer blue for headings
             border_color = "#444444"  # Subtle border
-            code_bg = "#1e1e1e"       # Base color (30, 30, 30)
+            code_bg = "#1e1e1e"  # Base color (30, 30, 30)
             btn_bg = "#3d3d3d"
             btn_hover = "#4d4d4d"
         else:  # light theme
-            bg_color = "#f0f0f0"      # Window color (240, 240, 240)
-            text_color = "#000000"    # Text color
-            heading_color = "#0366d8" # Blue for headings
+            bg_color = "#f0f0f0"  # Window color (240, 240, 240)
+            text_color = "#000000"  # Text color
+            heading_color = "#0366d8"  # Blue for headings
             border_color = "#cccccc"  # Subtle border
-            code_bg = "#e8e8e8"       # Slightly darker than background
+            code_bg = "#e8e8e8"  # Slightly darker than background
             btn_bg = "#e0e0e0"
             btn_hover = "#d0d0d0"
 
@@ -138,7 +139,9 @@ class QuickReferenceDialog(QDialog):
         text_browser = QTextBrowser()
         text_browser.setReadOnly(True)
         text_browser.setFont(QFont("Consolas", 10))
-        text_browser.setStyleSheet(f"background-color: {bg_color}; color: {text_color}; border: none;")
+        text_browser.setStyleSheet(
+            f"background-color: {bg_color}; color: {text_color}; border: none;"
+        )
 
         # Quick reference content - theme aware
         reference_content = f"""
@@ -252,92 +255,56 @@ class QuickReferenceDialog(QDialog):
 
 
 class ThemeManager:
-    """Centralized theme management for Fusion style"""
+    """Centralized theme management for Fusion style using the theme registry"""
+
+    @staticmethod
+    def get_fusion_palette(theme_name="dark"):
+        """Get Fusion style palette for the specified theme"""
+        from .theme_manager import get_fusion_palette
+
+        return get_fusion_palette(theme_name)
 
     @staticmethod
     def get_fusion_dark_palette():
-        """Create dark theme palette for Fusion style"""
-        palette = QPalette()
-        # Window colors
-        palette.setColor(QPalette.ColorRole.Window, QColor(45, 45, 45))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(187, 187, 187))
-        # Base colors (text input areas)
-        palette.setColor(QPalette.ColorRole.Base, QColor(30, 30, 30))
-        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(45, 45, 45))
-        # Text colors
-        palette.setColor(QPalette.ColorRole.Text, QColor(187, 187, 187))
-        # Button colors
-        palette.setColor(QPalette.ColorRole.Button, QColor(45, 45, 45))
-        palette.setColor(QPalette.ColorRole.ButtonText, QColor(187, 187, 187))
-        # Highlight colors (for search functionality)
-        palette.setColor(QPalette.ColorRole.Highlight, QColor(255, 215, 0))  # Gold
-        palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))  # Black
-
-        return palette
+        """Backward compatibility: Get dark theme palette"""
+        return ThemeManager.get_fusion_palette("dark")
 
     @staticmethod
     def get_fusion_light_palette():
-        """Create light theme palette for Fusion style"""
-        palette = QPalette()
-        # Window colors
-        palette.setColor(QPalette.ColorRole.Window, QColor(240, 240, 240))
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(0, 0, 0))
-        # Base colors
-        palette.setColor(QPalette.ColorRole.Base, QColor(255, 255, 255))
-        palette.setColor(QPalette.ColorRole.AlternateBase, QColor(245, 245, 245))
-        # Text colors
-        palette.setColor(QPalette.ColorRole.Text, QColor(0, 0, 0))
-        # Button colors
-        palette.setColor(QPalette.ColorRole.Button, QColor(240, 240, 240))
-        palette.setColor(QPalette.ColorRole.ButtonText, QColor(0, 0, 0))
-        # Highlight colors
-        palette.setColor(QPalette.ColorRole.Highlight, QColor(3, 102, 216))  # Blue
-        palette.setColor(
-            QPalette.ColorRole.HighlightedText, QColor(255, 255, 255)
-        )  # White
-
-        return palette
+        """Backward compatibility: Get light theme palette"""
+        return ThemeManager.get_fusion_palette("light")
 
     @staticmethod
     def get_search_css(theme_name="dark"):
         """Generate CSS for search highlighting that works with Fusion"""
-        if theme_name == "dark":
-            return """
-                QTextBrowser {
-                    selection-background-color: #ffd700 !important;
-                    selection-color: #000000 !important;
-                    font-weight: bold !important;
-                    border-radius: 2px !important;
-                }
-                /* Additional highlighting for multiple matches */
-                .search-current {
-                    background-color: #ffd700 !important;
-                    color: #000000 !important;
-                    font-weight: bold !important;
-                }
-                .search-other {
-                    background-color: #ff8c00 !important;
-                    color: #000000 !important;
-                }
-            """
-        else:  # light theme
-            return """
-                QTextBrowser {
-                    selection-background-color: #0366d8 !important;
-                    selection-color: #ffffff !important;
-                    font-weight: bold !important;
-                    border-radius: 2px !important;
-                }
-                .search-current {
-                    background-color: #0366d8 !important;
-                    color: #ffffff !important;
-                    font-weight: bold !important;
-                }
-                .search-other {
-                    background-color: #91a7ff !important;
-                    color: #000000 !important;
-                }
-            """
+        from .theme_manager import get_search_css
+
+        return get_search_css(theme_name)
+
+    @staticmethod
+    def get_available_themes():
+        """Get list of available theme names"""
+        from .theme_manager import get_theme_registry
+
+        registry = get_theme_registry()
+        return registry.get_theme_names()
+
+    @staticmethod
+    def get_theme_display_name(theme_name):
+        """Get display name for a theme"""
+        from .theme_manager import get_theme_registry
+
+        registry = get_theme_registry()
+        theme = registry.get_theme(theme_name)
+        return theme.display_name if theme else theme_name.capitalize()
+
+    @staticmethod
+    def get_themes_by_category(category):
+        """Get themes filtered by category"""
+        from .theme_manager import get_theme_registry
+
+        registry = get_theme_registry()
+        return registry.get_themes_by_category(category)
 
 
 class FindDialog(QDialog):
@@ -565,7 +532,9 @@ class FindDialog(QDialog):
 
         matches = []
         while True:
-            found_cursor = document.find(self.search_text, cursor, self.build_find_flags())
+            found_cursor = document.find(
+                self.search_text, cursor, self.build_find_flags()
+            )
             if found_cursor.isNull():
                 break
 
@@ -831,29 +800,57 @@ class MainWindow(QMainWindow):
 
         # Theme submenu
         theme_menu = view_menu.addMenu("&Theme")
+        self.theme_actions = {}
 
-        # Dark theme action
-        self.dark_theme_action = QAction("&Dark Theme", self)
-        self.dark_theme_action.setCheckable(True)
-        self.dark_theme_action.setChecked(self.current_theme == "dark")
-        self.dark_theme_action.setStatusTip("Switch to dark theme")
-        self.dark_theme_action.triggered.connect(lambda: self.switch_theme("dark"))
-        theme_menu.addAction(self.dark_theme_action)
+        # Get available themes and create menu actions
+        available_themes = ThemeManager.get_available_themes()
 
-        # Light theme action
-        self.light_theme_action = QAction("&Light Theme", self)
-        self.light_theme_action.setCheckable(True)
-        self.light_theme_action.setChecked(self.current_theme == "light")
-        self.light_theme_action.setStatusTip("Switch to light theme")
-        self.light_theme_action.triggered.connect(lambda: self.switch_theme("light"))
-        theme_menu.addAction(self.light_theme_action)
+        # Group themes by category for better organization
+        built_in_themes = []
+        popular_themes = []
 
-        # Theme toggle action with keyboard shortcut
-        toggle_theme_action = QAction("&Toggle Theme", self)
+        for theme_name in sorted(available_themes):
+            theme_obj = get_theme_registry().get_theme(theme_name)
+            if theme_obj:
+                if theme_obj.category == "Built-in":
+                    built_in_themes.append(theme_obj)
+                else:
+                    popular_themes.append(theme_obj)
+
+        # Add Built-in themes submenu
+        if built_in_themes:
+            built_in_menu = theme_menu.addMenu("&Built-in")
+            for theme_obj in built_in_themes:
+                action = QAction(f"&{theme_obj.display_name}", self)
+                action.setCheckable(True)
+                action.setChecked(self.current_theme == theme_obj.name)
+                action.setStatusTip(f"Switch to {theme_obj.display_name} theme")
+                action.triggered.connect(
+                    lambda checked, name=theme_obj.name: self.switch_theme(name)
+                )
+                built_in_menu.addAction(action)
+                self.theme_actions[theme_obj.name] = action
+
+        # Add Popular themes submenu
+        if popular_themes:
+            popular_menu = theme_menu.addMenu("&Popular")
+            for theme_obj in popular_themes:
+                action = QAction(f"&{theme_obj.display_name}", self)
+                action.setCheckable(True)
+                action.setChecked(self.current_theme == theme_obj.name)
+                action.setStatusTip(f"Switch to {theme_obj.display_name} theme")
+                action.triggered.connect(
+                    lambda checked, name=theme_obj.name: self.switch_theme(name)
+                )
+                popular_menu.addAction(action)
+                self.theme_actions[theme_obj.name] = action
+
+        # Theme toggle action with keyboard shortcut (toggles between dark and light)
+        toggle_theme_action = QAction("&Toggle Dark/Light", self)
         toggle_theme_action.setShortcut("Ctrl+T")
         toggle_theme_action.setStatusTip("Toggle between dark and light themes")
         toggle_theme_action.triggered.connect(self.toggle_theme)
-        view_menu.addAction(toggle_theme_action)
+        theme_menu.addAction(toggle_theme_action)
 
         # Hide paragraph marks action
         hide_marks_action = QAction("Hide Paragraph Marks", self)
@@ -968,13 +965,13 @@ class MainWindow(QMainWindow):
     def show_welcome_message(self):
         colors = self.renderer.get_effective_colors(self.current_theme)
         welcome_html = f"""
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; text-align: center; padding: 50px; color: {colors['body_text_color']}; background-color: {colors['background_color']};">
-            <h1 style="color: {colors['body_text_color']}; border-bottom: 1px solid {colors['border_color']}; padding-bottom: 0.3em;">Welcome to MDviewer</h1>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; text-align: center; padding: 50px; color: {colors["body_text_color"]}; background-color: {colors["background_color"]};">
+            <h1 style="color: {colors["body_text_color"]}; border-bottom: 1px solid {colors["border_color"]}; padding-bottom: 0.3em;">Welcome to MDviewer</h1>
             <p>A simple PyQt6 Markdown viewer with GitHub-style rendering</p>
-            <p>Use <strong>File &rarr; Open</strong> to open a markdown file, or press <kbd style="background-color: {colors['border_color']}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">Ctrl+O</kbd></p>
+            <p>Use <strong>File &rarr; Open</strong> to open a markdown file, or press <kbd style="background-color: {colors["border_color"]}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">Ctrl+O</kbd></p>
             <br>
             <p>Supported features:</p>
-            <ul style="text-align: left; display: inline-block; color: {colors['blockquote_color']};">
+            <ul style="text-align: left; display: inline-block; color: {colors["blockquote_color"]};">
                 <li>GitHub-style markdown rendering</li>
                 <li>Syntax highlighting for code blocks</li>
                 <li>Tables, headers, and standard markdown features</li>
@@ -1145,7 +1142,9 @@ class MainWindow(QMainWindow):
         """Handle keyboard shortcuts — 'b' pages backward (like less)."""
         if event.key() == Qt.Key.Key_B and not event.modifiers():
             scrollbar = self.text_browser.verticalScrollBar()
-            scrollbar.setValue(scrollbar.value() - self.text_browser.viewport().height())
+            scrollbar.setValue(
+                scrollbar.value() - self.text_browser.viewport().height()
+            )
         else:
             super().keyPressEvent(event)
 
@@ -1170,7 +1169,9 @@ class MainWindow(QMainWindow):
 
     def show_quick_reference(self):
         effective = self.renderer.get_effective_colors(self.current_theme)
-        dialog = QuickReferenceDialog(self, theme=self.current_theme, custom_colors=effective)
+        dialog = QuickReferenceDialog(
+            self, theme=self.current_theme, custom_colors=effective
+        )
         dialog.exec()
 
     def show_changelog(self):
@@ -1186,13 +1187,9 @@ class MainWindow(QMainWindow):
 
     def apply_theme(self, theme_name):
         """Apply Fusion style with theme-specific palette"""
-        # Get theme-specific palette
-        if theme_name == "dark":
-            palette = ThemeManager.get_fusion_dark_palette()
-            search_css = ThemeManager.get_search_css("dark")
-        else:  # light theme
-            palette = ThemeManager.get_fusion_light_palette()
-            search_css = ThemeManager.get_search_css("light")
+        # Get theme-specific palette from theme manager
+        palette = ThemeManager.get_fusion_palette(theme_name)
+        search_css = ThemeManager.get_search_css(theme_name)
 
         # Apply palette globally via QSettings (works during initialization)
         self.settings.setValue("theme_palette", palette)
@@ -1226,19 +1223,16 @@ class MainWindow(QMainWindow):
         # Update menu check states
         self.update_theme_menu_states()
 
-        # Update status bar
-        self.status_bar.showMessage(f"Theme changed to {theme_name}", 2000)
-
     def toggle_theme(self):
         """Toggle between dark and light themes"""
         new_theme = "light" if self.current_theme == "dark" else "dark"
         self.switch_theme(new_theme)
 
     def update_theme_menu_states(self):
-        """Update menu action check states based on current theme"""
-        if hasattr(self, "dark_theme_action") and hasattr(self, "light_theme_action"):
-            self.dark_theme_action.setChecked(self.current_theme == "dark")
-            self.light_theme_action.setChecked(self.current_theme == "light")
+        """Update the check states of theme menu actions"""
+        if hasattr(self, "theme_actions"):
+            for theme_name, action in self.theme_actions.items():
+                action.setChecked(self.current_theme == theme_name)
 
     def toggle_paragraph_marks(self):
         """Toggle paragraph marks visibility"""
@@ -1276,12 +1270,20 @@ class MainWindow(QMainWindow):
 
     def load_custom_colors(self):
         """Load custom color overrides from QSettings."""
-        for theme in ("dark", "light"):
+        registry = get_theme_registry()
+        available_themes = registry.get_theme_names()
+
+        for theme in available_themes:
+            if theme not in self.custom_colors:
+                self.custom_colors[theme] = {}
+
             self.settings.beginGroup(f"custom_colors/{theme}")
-            for key in DEFAULT_THEME_COLORS[theme]:
-                val = self.settings.value(key)
-                if val is not None:
-                    self.custom_colors[theme][key] = val
+            theme_obj = registry.get_theme(theme)
+            if theme_obj:
+                for key in theme_obj.content_colors.__dict__:
+                    val = self.settings.value(key)
+                    if val is not None:
+                        self.custom_colors[theme][key] = val
             self.settings.endGroup()
         self._apply_custom_colors_to_renderer()
 
@@ -1296,7 +1298,9 @@ class MainWindow(QMainWindow):
 
     def _apply_custom_colors_to_renderer(self):
         """Push the current theme's custom colors into the renderer."""
-        self.renderer.custom_colors = dict(self.custom_colors.get(self.current_theme, {}))
+        self.renderer.custom_colors = dict(
+            self.custom_colors.get(self.current_theme, {})
+        )
 
     def _apply_text_browser_stylesheet(self):
         """Update the QTextBrowser widget stylesheet to match current colors."""
@@ -1340,16 +1344,37 @@ class MainWindow(QMainWindow):
 
     def show_color_settings(self):
         """Open the color customization dialog."""
-        effective = dict(DEFAULT_THEME_COLORS[self.current_theme])
+        # Get effective colors (theme defaults + custom overrides)
+        registry = get_theme_registry()
+        theme_obj = registry.get_theme(self.current_theme)
+        if theme_obj:
+            effective = dict(theme_obj.content_colors.__dict__)
+        else:
+            effective = dict(
+                DEFAULT_THEME_COLORS.get(
+                    self.current_theme, DEFAULT_THEME_COLORS["dark"]
+                )
+            )
         effective.update(self.custom_colors.get(self.current_theme, {}))
 
         dialog = ColorSettingsDialog(self.current_theme, effective, self)
         dialog.colors_changed.connect(self._on_colors_changed)
         dialog.exec()
 
-        # After dialog closes, save the final state
-        final_colors = dialog.get_colors()
-        defaults = DEFAULT_THEME_COLORS[self.current_theme]
+        # After dialog closes, save final state
+        final_colors = dialog.current_colors
+        final_theme = dialog.theme
+
+        # Get theme defaults for comparison
+        registry = get_theme_registry()
+        theme_obj = registry.get_theme(final_theme)
+        if theme_obj:
+            defaults = dict(theme_obj.content_colors.__dict__)
+        else:
+            # Fallback to old method for backward compatibility
+            defaults = DEFAULT_THEME_COLORS.get(
+                final_theme, DEFAULT_THEME_COLORS["dark"]
+            )
 
         # Only store keys that differ from defaults
         overrides = {}
@@ -1357,15 +1382,30 @@ class MainWindow(QMainWindow):
             if val != defaults.get(key):
                 overrides[key] = val
 
-        self.custom_colors[self.current_theme] = overrides
-        self._apply_custom_colors_to_renderer()
-        self.save_custom_colors()
-        self._refresh_current_document()
-        self._apply_text_browser_stylesheet()
+        self.custom_colors[final_theme] = overrides
+
+        # If user switched to a different theme in the dialog, switch to it
+        if final_theme != self.current_theme:
+            self.switch_theme(final_theme)
+        else:
+            self._apply_custom_colors_to_renderer()
+            self.save_custom_colors()
+            self._refresh_current_document()
+            self._apply_text_browser_stylesheet()
 
     def _on_colors_changed(self, colors_dict):
-        """Handle live color changes from the dialog."""
-        defaults = dict(DEFAULT_THEME_COLORS[self.current_theme])
+        """Handle live color changes from dialog."""
+        # Get theme defaults for comparison
+        registry = get_theme_registry()
+        theme_obj = registry.get_theme(self.current_theme)
+        if theme_obj:
+            defaults = dict(theme_obj.content_colors.__dict__)
+        else:
+            # Fallback to old method for backward compatibility
+            defaults = DEFAULT_THEME_COLORS.get(
+                self.current_theme, DEFAULT_THEME_COLORS["dark"]
+            )
+
         overrides = {}
         for key, val in colors_dict.items():
             if val != defaults.get(key):

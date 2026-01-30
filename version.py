@@ -4,9 +4,9 @@ Centralized version management for MDviewer.
 Provides semantic versioning and version-related utilities.
 """
 
-__version__ = "0.0.7"
-__version_date__ = "2026-01-29 2215"
-__version_info__ = (0, 0, 7)
+__version__ = "0.0.8"
+__version_date__ = "2026-01-30 2230"
+__version_info__ = (0, 0, 8)
 
 
 def get_version_string():

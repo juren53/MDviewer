@@ -5,28 +5,8 @@ from pygments.formatters import HtmlFormatter
 import re
 import os
 
-
-# Single source of truth for default theme colors
-DEFAULT_THEME_COLORS = {
-    "dark": {
-        "heading_color": "#58a6ff",
-        "body_text_color": "#c9d1d9",
-        "background_color": "#0d1117",
-        "link_color": "#58a6ff",
-        "blockquote_color": "#8b949e",
-        "code_bg_color": "#161b22",
-        "border_color": "#30363d",
-    },
-    "light": {
-        "heading_color": "#0366d8",
-        "body_text_color": "#24292e",
-        "background_color": "#ffffff",
-        "link_color": "#0366d8",
-        "blockquote_color": "#6a737d",
-        "code_bg_color": "#f6f8fa",
-        "border_color": "#e1e4e8",
-    },
-}
+# Import theme manager for centralized theme handling
+from .theme_manager import get_theme_registry
 
 
 class CodeBlockExtension(markdown.extensions.Extension):
@@ -88,7 +68,14 @@ class MarkdownRenderer:
 
     def get_effective_colors(self, theme):
         """Return the color dictionary for the given theme, with custom overrides applied."""
-        base = dict(DEFAULT_THEME_COLORS.get(theme, DEFAULT_THEME_COLORS["dark"]))
+        registry = get_theme_registry()
+        theme_obj = registry.get_theme(theme)
+
+        if not theme_obj:
+            # Fallback to dark theme
+            theme_obj = registry.get_theme("dark")
+
+        base = dict(theme_obj.content_colors.__dict__)
         base.update(self.custom_colors)
         return base
 
@@ -176,7 +163,7 @@ class MarkdownRenderer:
         if self.hide_paragraph_marks:
             # Remove headerlink (pilcrow) elements from HTML since CSS hiding
             # doesn't work reliably in QTextBrowser
-            html = re.sub(r'<a[^>]*class="headerlink"[^>]*>.*?</a>', '', html)
+            html = re.sub(r'<a[^>]*class="headerlink"[^>]*>.*?</a>', "", html)
         else:
             # Add paragraph marks (periods) when visible
             html = self._add_paragraph_marks(html)
@@ -475,63 +462,63 @@ class MarkdownRenderer:
         }}
 
         /* Syntax highlighting */
-        .hll { background-color: #404040 }
-        .c { color: #6a9955; font-style: italic }
-        .err { color: #f44747 }
-        .k { color: #569cd6 }
-        .o { color: #d4d4d4 }
-        .cm { color: #6a9955; font-style: italic }
-        .cp { color: #9cdcfe }
-        .c1 { color: #6a9955; font-style: italic }
-        .cs { color: #6a9955; font-style: italic }
-        .gd { color: #f44747 }
-        .ge { color: #d4d4d4; font-style: italic }
-        .gr { color: #f44747 }
-        .gh { color: #569cd6 }
-        .gi { color: #4ec9b0 }
-        .go { color: #d4d4d4 }
-        .gp { color: #6a9955 }
-        .gs { font-weight: bold }
-        .gu { color: #ce9178 }
-        .gt { color: #f44747 }
-        .kc { color: #569cd6 }
-        .kd { color: #569cd6 }
-        .kn { color: #569cd6 }
-        .kp { color: #569cd6 }
-        .kr { color: #569cd6 }
-        .kt { color: #4ec9b0 }
-        .m { color: #b5cea8 }
-        .s { color: #ce9178 }
-        .na { color: #9cdcfe }
-        .nb { color: #dcdcaa }
-        .nc { color: #4ec9b0 }
-        .no { color: #4fc1ff }
-        .ni { color: #dcdcaa }
-        .ne { color: #f44747 }
-        .nf { color: #dcdcaa }
-        .nn { color: #4ec9b0 }
-        .nt { color: #569cd6 }
-        .nv { color: #9cdcfe }
-        .ow { color: #569cd6 }
-        .w { color: #d4d4d4 }
-        .mf { color: #b5cea8 }
-        .mh { color: #b5cea8 }
-        .mi { color: #b5cea8 }
-        .mo { color: #b5cea8 }
-        .sb { color: #ce9178 }
-        .sc { color: #ce9178 }
-        .sd { color: #6a9955; font-style: italic }
-        .s2 { color: #ce9178 }
-        .se { color: #d7ba7d }
-        .sh { color: #ce9178 }
-        .si { color: #9cdcfe }
-        .sx { color: #4ec9b0 }
-        .sr { color: #d16969 }
-        .s1 { color: #ce9178 }
-        .ss { color: #9cdcfe }
-        .bp { color: #569cd6 }
-        .vc { color: #9cdcfe }
-        .vg { color: #9cdcfe }
-        .vi { color: #9cdcfe }
-        .il { color: #b5cea8 }
+        .hll {background - color: #404040 }
+        .c {color: #6a9955; font-style: italic }
+        .err {color: #f44747 }
+        .k {color: #569cd6 }
+        .o {color: #d4d4d4 }
+        .cm {color: #6a9955; font-style: italic }
+        .cp {color: #9cdcfe }
+        .c1 {color: #6a9955; font-style: italic }
+        .cs {color: #6a9955; font-style: italic }
+        .gd {color: #f44747 }
+        .ge {color: #d4d4d4; font-style: italic }
+        .gr {color: #f44747 }
+        .gh {color: #569cd6 }
+        .gi {color: #4ec9b0 }
+        .go {color: #d4d4d4 }
+        .gp {color: #6a9955 }
+        .gs {font - weight: bold }
+        .gu {color: #ce9178 }
+        .gt {color: #f44747 }
+        .kc {color: #569cd6 }
+        .kd {color: #569cd6 }
+        .kn {color: #569cd6 }
+        .kp {color: #569cd6 }
+        .kr {color: #569cd6 }
+        .kt {color: #4ec9b0 }
+        .m {color: #b5cea8 }
+        .s {color: #ce9178 }
+        .na {color: #9cdcfe }
+        .nb {color: #dcdcaa }
+        .nc {color: #4ec9b0 }
+        .no {color: #4fc1ff }
+        .ni {color: #dcdcaa }
+        .ne {color: #f44747 }
+        .nf {color: #dcdcaa }
+        .nn {color: #4ec9b0 }
+        .nt {color: #569cd6 }
+        .nv {color: #9cdcfe }
+        .ow {color: #569cd6 }
+        .w {color: #d4d4d4 }
+        .mf {color: #b5cea8 }
+        .mh {color: #b5cea8 }
+        .mi {color: #b5cea8 }
+        .mo {color: #b5cea8 }
+        .sb {color: #ce9178 }
+        .sc {color: #ce9178 }
+        .sd {color: #6a9955; font-style: italic }
+        .s2 {color: #ce9178 }
+        .se {color: #d7ba7d }
+        .sh {color: #ce9178 }
+        .si {color: #9cdcfe }
+        .sx {color: #4ec9b0 }
+        .sr {color: #d16969 }
+        .s1 {color: #ce9178 }
+        .ss {color: #9cdcfe }
+        .bp {color: #569cd6 }
+        .vc {color: #9cdcfe }
+        .vg {color: #9cdcfe }
+        .vi {color: #9cdcfe }
+        .il {color: #b5cea8 }
         """

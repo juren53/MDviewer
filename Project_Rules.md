@@ -26,6 +26,12 @@ Example formats:
 
 
 
+## Preferred Python Instance
+
+- Use `C:\Users\jimur\AppData\Local\Microsoft\WindowsApps\python.exe` as the preferred Python instance
+- This instance has PyQt6 and other required dependencies installed
+- Add this Python path to system PATH for development
+
 ## Compiling Instructions
 
 - compile PathManager to make a single executable EXE file using icons\ICON_PathMgr.png as the application icon

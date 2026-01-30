@@ -6,11 +6,25 @@ from PyQt6.QtWidgets import (
     QLabel,
     QPushButton,
     QColorDialog,
+    QComboBox,
 )
 from PyQt6.QtGui import QFont
 from PyQt6.QtCore import Qt, pyqtSignal
 
-from .markdown_renderer import DEFAULT_THEME_COLORS
+from .theme_manager import get_theme_registry
+
+
+# For backward compatibility, define DEFAULT_THEME_COLORS from theme registry
+def get_default_theme_colors():
+    """Get default theme colors for backward compatibility"""
+    registry = get_theme_registry()
+    return {
+        theme_name: dict(theme.content_colors.__dict__)
+        for theme_name, theme in registry.get_all_themes().items()
+    }
+
+
+DEFAULT_THEME_COLORS = get_default_theme_colors()
 
 
 # Human-readable labels and display order for color settings
@@ -36,22 +50,43 @@ class ColorSettingsDialog(QDialog):
         self.current_colors = dict(current_colors)
         self.color_buttons = {}
         self.preview_labels = {}
+        self.original_theme = theme
 
-        self.setWindowTitle(f"Element Colors - {theme.capitalize()} Theme")
+        # Get available themes
+        self.registry = get_theme_registry()
+        self.available_themes = self.registry.get_theme_names()
+
+        self.setWindowTitle("Element Colors - Customize Themes")
         self.setModal(False)
-        self.setFixedSize(520, 360)
+        self.setFixedSize(520, 420)
 
         self._setup_ui()
         self._apply_dialog_theme()
+        self._populate_theme_selector()
 
     def _setup_ui(self):
         main_layout = QVBoxLayout()
 
-        title = QLabel(f"Customize {self.theme.capitalize()} Theme Colors")
+        title = QLabel("Customize Theme Colors")
         title.setFont(QFont("Arial", 12, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(title)
         main_layout.addSpacing(8)
+
+        # Theme selector
+        theme_selector_layout = QHBoxLayout()
+        theme_label = QLabel("Select Theme:")
+        theme_label.setFont(QFont("Arial", 10, QFont.Weight.Bold))
+
+        self.theme_combo = QComboBox()
+        self.theme_combo.setMinimumWidth(150)
+
+        theme_selector_layout.addWidget(theme_label)
+        theme_selector_layout.addWidget(self.theme_combo)
+        theme_selector_layout.addStretch()
+
+        main_layout.addLayout(theme_selector_layout)
+        main_layout.addSpacing(5)
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -112,15 +147,76 @@ class ColorSettingsDialog(QDialog):
             self._update_preview(key, hex_val)
             self.colors_changed.emit(dict(self.current_colors))
 
+    def _populate_theme_selector(self):
+        """Populate the theme selector combo box"""
+        self.theme_combo.clear()
+
+        # Group themes by category
+        categories = {}
+        for theme_name in self.available_themes:
+            theme = self.registry.get_theme(theme_name)
+            if theme:
+                category = theme.category
+                if category not in categories:
+                    categories[category] = []
+                categories[category].append(theme)
+
+        # Add themes in category order
+        for category in ["Built-in", "Popular"]:
+            if category in categories:
+                for theme in sorted(categories[category], key=lambda t: t.display_name):
+                    self.theme_combo.addItem(theme.display_name, theme.name)
+
+        # Select current theme
+        for i in range(self.theme_combo.count()):
+            if self.theme_combo.itemData(i) == self.theme:
+                self.theme_combo.setCurrentIndex(i)
+                break
+
+        # Connect signal after initial selection
+        self.theme_combo.currentTextChanged.connect(self._on_theme_changed)
+
+    def _on_theme_changed(self):
+        """Handle theme selection change"""
+        selected_theme = self.theme_combo.currentData()
+        if selected_theme and selected_theme != self.theme:
+            # Switch to new theme
+            self.theme = selected_theme
+            self._load_theme_colors()
+
+            # Update window title
+            theme_obj = self.registry.get_theme(self.theme)
+            display_name = (
+                theme_obj.display_name if theme_obj else self.theme.capitalize()
+            )
+            self.setWindowTitle(f"Element Colors - {display_name} Theme")
+
+            # Emit colors changed signal with new theme colors
+            self.colors_changed.emit(dict(self.current_colors))
+
+    def _load_theme_colors(self):
+        """Load colors for the current theme"""
+        theme_obj = self.registry.get_theme(self.theme)
+        if theme_obj:
+            self.current_colors = dict(theme_obj.content_colors.__dict__)
+        else:
+            # Fallback to DEFAULT_THEME_COLORS for backward compatibility
+            defaults = DEFAULT_THEME_COLORS.get(
+                self.theme, DEFAULT_THEME_COLORS["dark"]
+            )
+            self.current_colors = dict(defaults)
+
+        # Update UI elements with new colors
+        for key, _ in COLOR_SETTINGS:
+            if key in self.current_colors:
+                self._update_button_color(
+                    self.color_buttons[key], self.current_colors[key]
+                )
+                self._update_preview(key, self.current_colors[key])
+
     def _reset_to_defaults(self):
         """Reset all colors to theme defaults."""
-        defaults = DEFAULT_THEME_COLORS[self.theme]
-        self.current_colors = dict(defaults)
-
-        for key, _ in COLOR_SETTINGS:
-            self._update_button_color(self.color_buttons[key], defaults[key])
-            self._update_preview(key, defaults[key])
-
+        self._load_theme_colors()
         self.colors_changed.emit(dict(self.current_colors))
 
     def _update_button_color(self, button, hex_color):
@@ -178,8 +274,7 @@ class ColorSettingsDialog(QDialog):
             )
         elif key == "code_bg_color":
             label.setStyleSheet(
-                f"background-color: {hex_color}; "
-                f"border-radius: 3px; padding: 2px 6px;"
+                f"background-color: {hex_color}; border-radius: 3px; padding: 2px 6px;"
             )
         elif key == "border_color":
             label.setStyleSheet(

@@ -5,6 +5,41 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2026-01-30 2230 CST
+
+### Added
+- **Multi-Theme System** - Complete theme architecture overhaul supporting unlimited themes
+  - **5 Built-in Themes**: Dark, Light, Solarized Light, Dracula, GitHub
+  - **Theme Categories**: Organized by Built-in and Popular themes
+  - **Dynamic Menus**: Theme lists auto-populate from registry (View → Theme)
+  - **Theme Registry**: Centralized theme management with validation
+  - **Extensible Architecture**: Easy to add new themes without code changes
+
+### Enhanced
+- **Color Settings Dialog** - Completely redesigned for multi-theme support
+  - **Theme Selector**: Dropdown to switch between themes while customizing
+  - **Live Theme Switching**: Change themes without closing dialog
+  - **Per-Theme Customization**: Independent color overrides for each theme
+  - **Better Organization**: Themes grouped by category in color settings
+
+### New Themes
+- **Solarized Light**: Eye-friendly reading theme with warm tones
+- **Dracula**: Popular vibrant color scheme with high contrast
+- **GitHub**: Official GitHub theme colors matching current GitHub UI
+
+### Technical
+- **New Theme Manager** (`viewer/theme_manager.py`) - Complete theme infrastructure
+  - **Theme Data Classes**: Structured theme definitions with validation
+  - **Theme Registry**: Central storage and discovery system
+  - **Backward Compatibility**: Existing themes and settings preserved
+  - **Performance**: Efficient theme switching with cached definitions
+- **Updated Architecture**: All components now use dynamic theme system
+  - **Markdown Renderer**: Migrated from hardcoded colors to registry
+  - **Main Window**: Enhanced ThemeManager with registry integration
+  - **Color Settings**: Multi-theme support with live preview
+
+---
+
 ## [0.0.7] - 2026-01-29 2215 CST
 
 ### Added
