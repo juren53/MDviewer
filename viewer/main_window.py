@@ -32,7 +32,8 @@ from PyQt6.QtGui import (
     QColor,
     QTextDocument,
 )
-from .markdown_renderer import MarkdownRenderer
+from .markdown_renderer import MarkdownRenderer, DEFAULT_THEME_COLORS
+from .color_settings_dialog import ColorSettingsDialog
 from .update_dialogs import (
     VersionCompareDialog,
     UpToDateDialog,
@@ -86,7 +87,7 @@ class AboutDialog(QDialog):
 
 
 class QuickReferenceDialog(QDialog):
-    def __init__(self, parent=None, theme="dark"):
+    def __init__(self, parent=None, theme="dark", custom_colors=None):
         super().__init__(parent)
         self.setWindowTitle("Quick Reference - MDviewer")
         self.setModal(True)
@@ -109,6 +110,10 @@ class QuickReferenceDialog(QDialog):
             code_bg = "#e8e8e8"       # Slightly darker than background
             btn_bg = "#e0e0e0"
             btn_hover = "#d0d0d0"
+
+        # Apply custom heading color if provided
+        if custom_colors and "heading_color" in custom_colors:
+            heading_color = custom_colors["heading_color"]
 
         # Style the dialog itself
         self.setStyleSheet(f"""
@@ -706,6 +711,10 @@ class MainWindow(QMainWindow):
         # Load paragraph marks preference from settings
         self.load_paragraph_marks_settings()
 
+        # Load custom color overrides for both themes
+        self.custom_colors = {"dark": {}, "light": {}}
+        self.load_custom_colors()
+
         # Load recent files from settings
         self.load_recent_files()
 
@@ -717,31 +726,8 @@ class MainWindow(QMainWindow):
         self.text_browser.setFont(QFont("Consolas", 11))
         self.text_browser.setReadOnly(True)
 
-        # Apply dark theme to the text browser
-        self.text_browser.setStyleSheet("""
-            QTextBrowser {
-                background-color: #0d1117;
-                color: #c9d1d9;
-                border: none;
-            }
-            QScrollBar:vertical {
-                background-color: #161b22;
-                width: 12px;
-                border: none;
-            }
-            QScrollBar::handle:vertical {
-                background-color: #30363d;
-                min-height: 20px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background-color: #484f58;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                border: none;
-                background: none;
-            }
-        """)
+        # Apply theme-aware stylesheet to text browser
+        self._apply_text_browser_stylesheet()
 
         # Set theme in renderer
         self.renderer.current_theme = self.current_theme
@@ -870,6 +856,13 @@ class MainWindow(QMainWindow):
         hide_marks_action.triggered.connect(self.toggle_paragraph_marks)
         view_menu.addAction(hide_marks_action)
 
+        view_menu.addSeparator()
+
+        color_settings_action = QAction("&Element Colors...", self)
+        color_settings_action.setStatusTip("Customize document element colors")
+        color_settings_action.triggered.connect(self.show_color_settings)
+        view_menu.addAction(color_settings_action)
+
         # Help Menu
         help_menu = menubar.addMenu("&Help")
 
@@ -965,14 +958,15 @@ class MainWindow(QMainWindow):
         self.show_welcome_message()
 
     def show_welcome_message(self):
-        welcome_html = """
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; text-align: center; padding: 50px; color: #c9d1d9; background-color: #0d1117;">
-            <h1 style="color: #c9d1d9; border-bottom: 1px solid #30363d; padding-bottom: 0.3em;">Welcome to MDviewer</h1>
+        colors = self.renderer.get_effective_colors(self.current_theme)
+        welcome_html = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; text-align: center; padding: 50px; color: {colors['body_text_color']}; background-color: {colors['background_color']};">
+            <h1 style="color: {colors['body_text_color']}; border-bottom: 1px solid {colors['border_color']}; padding-bottom: 0.3em;">Welcome to MDviewer</h1>
             <p>A simple PyQt6 Markdown viewer with GitHub-style rendering</p>
-            <p>Use <strong>File → Open</strong> to open a markdown file, or press <kbd style="background-color: #30363d; padding: 2px 4px; border-radius: 3px; font-family: monospace;">Ctrl+O</kbd></p>
+            <p>Use <strong>File &rarr; Open</strong> to open a markdown file, or press <kbd style="background-color: {colors['border_color']}; padding: 2px 4px; border-radius: 3px; font-family: monospace;">Ctrl+O</kbd></p>
             <br>
             <p>Supported features:</p>
-            <ul style="text-align: left; display: inline-block; color: #8b949e;">
+            <ul style="text-align: left; display: inline-block; color: {colors['blockquote_color']};">
                 <li>GitHub-style markdown rendering</li>
                 <li>Syntax highlighting for code blocks</li>
                 <li>Tables, headers, and standard markdown features</li>
@@ -1150,13 +1144,17 @@ class MainWindow(QMainWindow):
         # Save paragraph marks preference
         self.settings.setValue("hide_paragraph_marks", self.hide_paragraph_marks)
 
+        # Save custom color overrides
+        self.save_custom_colors()
+
         # Save current file for restore on startup
         if self.current_file:
             self.settings.setValue("last_opened_file", self.current_file)
         super().closeEvent(event)
 
     def show_quick_reference(self):
-        dialog = QuickReferenceDialog(self, theme=self.current_theme)
+        effective = self.renderer.get_effective_colors(self.current_theme)
+        dialog = QuickReferenceDialog(self, theme=self.current_theme, custom_colors=effective)
         dialog.exec()
 
     def show_changelog(self):
@@ -1186,7 +1184,7 @@ class MainWindow(QMainWindow):
 
         # Apply to current text browser if it exists
         if hasattr(self, "text_browser"):
-            self.text_browser.setStyleSheet(search_css)
+            self._apply_text_browser_stylesheet()
 
     def switch_theme(self, theme_name):
         """Switch between dark and light themes"""
@@ -1199,15 +1197,12 @@ class MainWindow(QMainWindow):
         # Apply theme via existing apply_theme method
         self.apply_theme(theme_name)
 
-        # Update renderer theme
+        # Update renderer theme and apply per-theme custom colors
         self.renderer.current_theme = theme_name
+        self._apply_custom_colors_to_renderer()
 
-        # Reload current document if open
-        if self.current_file:
-            self.load_file_from_path(self.current_file)
-        else:
-            # Reload welcome message
-            self.show_welcome_message()
+        # Reload current document
+        self._refresh_current_document()
 
         # Save theme preference
         self.settings.setValue("current_theme", theme_name)
@@ -1262,6 +1257,107 @@ class MainWindow(QMainWindow):
         """Load paragraph marks preference from settings"""
         saved_setting = self.settings.value("hide_paragraph_marks", False, type=bool)
         self.hide_paragraph_marks = saved_setting
+
+    def load_custom_colors(self):
+        """Load custom color overrides from QSettings."""
+        for theme in ("dark", "light"):
+            self.settings.beginGroup(f"custom_colors/{theme}")
+            for key in DEFAULT_THEME_COLORS[theme]:
+                val = self.settings.value(key)
+                if val is not None:
+                    self.custom_colors[theme][key] = val
+            self.settings.endGroup()
+        self._apply_custom_colors_to_renderer()
+
+    def save_custom_colors(self):
+        """Save custom color overrides to QSettings."""
+        for theme in ("dark", "light"):
+            self.settings.beginGroup(f"custom_colors/{theme}")
+            self.settings.remove("")
+            for key, val in self.custom_colors[theme].items():
+                self.settings.setValue(key, val)
+            self.settings.endGroup()
+
+    def _apply_custom_colors_to_renderer(self):
+        """Push the current theme's custom colors into the renderer."""
+        self.renderer.custom_colors = dict(self.custom_colors.get(self.current_theme, {}))
+
+    def _apply_text_browser_stylesheet(self):
+        """Update the QTextBrowser widget stylesheet to match current colors."""
+        colors = self.renderer.get_effective_colors(self.current_theme)
+        bg = colors["background_color"]
+        text = colors["body_text_color"]
+        scrollbar_bg = colors["code_bg_color"]
+        scrollbar_handle = colors["border_color"]
+
+        self.text_browser.setStyleSheet(f"""
+            QTextBrowser {{
+                background-color: {bg};
+                color: {text};
+                border: none;
+            }}
+            QScrollBar:vertical {{
+                background-color: {scrollbar_bg};
+                width: 12px;
+                border: none;
+            }}
+            QScrollBar::handle:vertical {{
+                background-color: {scrollbar_handle};
+                min-height: 20px;
+                border-radius: 6px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background-color: #484f58;
+            }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+                border: none;
+                background: none;
+            }}
+        """)
+
+    def _refresh_current_document(self):
+        """Re-render and display the current document or welcome message."""
+        if self.current_file:
+            self.load_file_from_path(self.current_file)
+        else:
+            self.show_welcome_message()
+
+    def show_color_settings(self):
+        """Open the color customization dialog."""
+        effective = dict(DEFAULT_THEME_COLORS[self.current_theme])
+        effective.update(self.custom_colors.get(self.current_theme, {}))
+
+        dialog = ColorSettingsDialog(self.current_theme, effective, self)
+        dialog.colors_changed.connect(self._on_colors_changed)
+        dialog.exec()
+
+        # After dialog closes, save the final state
+        final_colors = dialog.get_colors()
+        defaults = DEFAULT_THEME_COLORS[self.current_theme]
+
+        # Only store keys that differ from defaults
+        overrides = {}
+        for key, val in final_colors.items():
+            if val != defaults.get(key):
+                overrides[key] = val
+
+        self.custom_colors[self.current_theme] = overrides
+        self._apply_custom_colors_to_renderer()
+        self.save_custom_colors()
+        self._refresh_current_document()
+        self._apply_text_browser_stylesheet()
+
+    def _on_colors_changed(self, colors_dict):
+        """Handle live color changes from the dialog."""
+        defaults = dict(DEFAULT_THEME_COLORS[self.current_theme])
+        overrides = {}
+        for key, val in colors_dict.items():
+            if val != defaults.get(key):
+                overrides[key] = val
+
+        self.renderer.custom_colors = overrides
+        self._refresh_current_document()
+        self._apply_text_browser_stylesheet()
 
     def setup_find_dialog(self):
         """Create find dialog instance"""

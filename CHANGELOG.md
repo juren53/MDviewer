@@ -5,6 +5,28 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2026-01-29 2044 CST
+
+### Added
+- **Element Color Customization** - Customize colors for key document elements per theme
+  - View → Element Colors... menu item opens color configuration dialog
+  - 7 customizable elements: Headings, Body Text, Background, Links, Blockquotes, Code Blocks, Borders/Rules
+  - Click color swatches to open native OS color picker
+  - Live preview: changes apply immediately to the document
+  - Independent color overrides for dark and light themes
+  - Colors persist across application sessions via QSettings
+  - "Reset to Defaults" button restores original theme colors
+  - Only colors that differ from defaults are stored
+
+### Technical
+- Added `DEFAULT_THEME_COLORS` constant dictionary as single source of truth for theme colors
+- Refactored `get_theme_css()` to use color dictionary instead of hardcoded hex values
+- New `ColorSettingsDialog` class with grid layout and `colors_changed` signal
+- Dynamic stylesheet generation for QTextBrowser replaces hardcoded stylesheet
+- Quick Reference dialog reflects custom heading color
+
+---
+
 ## [0.0.5] - 2026-01-25 1645 CST
 
 ### Added

@@ -6,6 +6,29 @@ import re
 import os
 
 
+# Single source of truth for default theme colors
+DEFAULT_THEME_COLORS = {
+    "dark": {
+        "heading_color": "#58a6ff",
+        "body_text_color": "#c9d1d9",
+        "background_color": "#0d1117",
+        "link_color": "#58a6ff",
+        "blockquote_color": "#8b949e",
+        "code_bg_color": "#161b22",
+        "border_color": "#30363d",
+    },
+    "light": {
+        "heading_color": "#0366d8",
+        "body_text_color": "#24292e",
+        "background_color": "#ffffff",
+        "link_color": "#0366d8",
+        "blockquote_color": "#6a737d",
+        "code_bg_color": "#f6f8fa",
+        "border_color": "#e1e4e8",
+    },
+}
+
+
 class CodeBlockExtension(markdown.extensions.Extension):
     """Extension to handle code blocks with syntax highlighting using Pygments."""
 
@@ -44,6 +67,8 @@ class MarkdownRenderer:
         self.current_theme = theme
         # Paragraph marks state
         self.hide_paragraph_marks = False
+        # Custom color overrides (populated from QSettings)
+        self.custom_colors = {}
 
         # Configure code highlighting
         self.extension_configs = {
@@ -61,143 +86,82 @@ class MarkdownRenderer:
             extensions=self.extensions, extension_configs=self.extension_configs
         )
 
+    def get_effective_colors(self, theme):
+        """Return the color dictionary for the given theme, with custom overrides applied."""
+        base = dict(DEFAULT_THEME_COLORS.get(theme, DEFAULT_THEME_COLORS["dark"]))
+        base.update(self.custom_colors)
+        return base
+
     def get_theme_css(self, theme, hide_paragraph_marks=False):
         """Get theme-specific CSS"""
-        hide_marks_class = "paragraph-marks-hidden" if hide_paragraph_marks else ""
+        colors = self.get_effective_colors(theme)
+        paragraph_mark_color = colors["blockquote_color"]
 
-        if theme == "dark":
-            return """
-                body {
+        return f"""
+                body {{
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
                     font-size: 16px;
                     line-height: 1.5;
                     word-wrap: break-word;
-                    color: #c9d1d9;
-                    background-color: #0d1117;
+                    color: {colors["body_text_color"]};
+                    background-color: {colors["background_color"]};
                     margin: 0;
                     padding: 20px;
-                }
-                
-                .markdown-body {
+                }}
+
+                .markdown-body {{
                     max-width: 980px;
                     margin: 0 auto;
-                }
-                
-                .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-                    color: #58a6ff;
-                    border-bottom: 1px solid #30363d;
+                }}
+
+                .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {{
+                    color: {colors["heading_color"]};
+                    border-bottom: 1px solid {colors["border_color"]};
                     padding-bottom: 0.3em;
-                }
-                
-                .markdown-body table th, .markdown-body table td {
+                }}
+
+                .markdown-body table th, .markdown-body table td {{
                     padding: 6px 13px;
-                    border: 1px solid #30363d;
-                }
-                
-                .markdown-body table th {
+                    border: 1px solid {colors["border_color"]};
+                }}
+
+                .markdown-body table th {{
                     font-weight: 600;
-                    background-color: #161b22;
-                }
-                
-                .markdown-body table tr:nth-child(2n) {
-                    background-color: #0d1117;
-                }
-                
-                .markdown-body hr {
+                    background-color: {colors["code_bg_color"]};
+                }}
+
+                .markdown-body table tr:nth-child(2n) {{
+                    background-color: {colors["background_color"]};
+                }}
+
+                .markdown-body hr {{
                     height: 0.25em;
                     padding: 0;
                     border: 0;
-                    background-color: #30363d;
-                }
-                
-                .paragraph-mark {
-                    color: #8b949e;
+                    background-color: {colors["border_color"]};
+                }}
+
+                .paragraph-mark {{
+                    color: {paragraph_mark_color};
                     font-size: 0.8em;
                     opacity: 0.6;
                     margin-left: 4px;
                     font-weight: normal;
                     display: inline;
-                }
+                }}
 
-                .headerlink {
-                    color: #8b949e;
+                .headerlink {{
+                    color: {paragraph_mark_color};
                     font-size: 0.8em;
                     opacity: 0.6;
                     margin-left: 4px;
                     text-decoration: none;
-                }
+                }}
 
                 .paragraph-marks-hidden .paragraph-mark,
-                .paragraph-marks-hidden .headerlink {
+                .paragraph-marks-hidden .headerlink {{
                     display: none;
-                }
-            """
-        else:  # light theme
-            return """
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-                    font-size: 16px;
-                    line-height: 1.5;
-                    word-wrap: break-word;
-                    color: #24292e;
-                    background-color: #ffffff;
-                    margin: 0;
-                    padding: 20px;
-                }
-                
-                .markdown-body {
-                    max-width: 980px;
-                    margin: 0 auto;
-                }
-                
-                .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
-                    color: #0366d8;
-                    border-bottom: 1px solid #e1e4e8;
-                    padding-bottom: 0.3em;
-                }
-                
-                .markdown-body table th, .markdown-body table td {
-                    padding: 6px 13px;
-                    border: 1px solid #d0d7de;
-                }
-                
-                .markdown-body table th {
-                    font-weight: 600;
-                    background-color: #f6f8fa;
-                }
-                
-                .markdown-body table tr:nth-child(2n) {
-                    background-color: #f8f9fa;
-                }
-                
-                .markdown-body hr {
-                    height: 0.25em;
-                    padding: 0;
-                    border: 0;
-                    background-color: #e1e4e8;
-                }
-                
-                .paragraph-mark {
-                    color: #6a737d;
-                    font-size: 0.8em;
-                    opacity: 0.6;
-                    margin-left: 4px;
-                    font-weight: normal;
-                    display: inline;
-                }
-
-                .headerlink {
-                    color: #6a737d;
-                    font-size: 0.8em;
-                    opacity: 0.6;
-                    margin-left: 4px;
-                    text-decoration: none;
-                }
-
-                .paragraph-marks-hidden .paragraph-mark,
-                .paragraph-marks-hidden .headerlink {
-                    display: none;
-                }
+                }}
             """
 
     def render(self, text):
@@ -350,112 +314,112 @@ class MarkdownRenderer:
 
     def _get_github_css(self):
         """Get GitHub-style CSS for markdown rendering."""
+        colors = self.get_effective_colors(self.current_theme)
 
-        # Dark theme GitHub markdown CSS
-        return """
-        body {
+        return f"""
+        body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
             font-size: 16px;
             line-height: 1.5;
             word-wrap: break-word;
-            color: #c9d1d9;
-            background-color: #0d1117;
+            color: {colors["body_text_color"]};
+            background-color: {colors["background_color"]};
             margin: 0;
             padding: 20px;
-        }
-        
-        .markdown-body {
+        }}
+
+        .markdown-body {{
             max-width: 980px;
             margin: 0 auto;
-        }
-        
-        .markdown-body h1, .markdown-body h2, .markdown-body h3, 
-        .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+        }}
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3,
+        .markdown-body h4, .markdown-body h5, .markdown-body h6 {{
             margin-top: 24px;
             margin-bottom: 16px;
             font-weight: 600;
             line-height: 1.25;
             position: relative;
-        }
-        
-        .markdown-body h1 {
+        }}
+
+        .markdown-body h1 {{
             font-size: 2em;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid {colors["border_color"]};
             padding-bottom: 0.3em;
-        }
-        
-        .markdown-body h2 {
+        }}
+
+        .markdown-body h2 {{
             font-size: 1.5em;
-            border-bottom: 1px solid #30363d;
+            border-bottom: 1px solid {colors["border_color"]};
             padding-bottom: 0.3em;
-        }
-        
-        .markdown-body h3 {
+        }}
+
+        .markdown-body h3 {{
             font-size: 1.25em;
-        }
-        
-        .markdown-body h4 {
+        }}
+
+        .markdown-body h4 {{
             font-size: 1em;
-        }
-        
-        .markdown-body h5 {
+        }}
+
+        .markdown-body h5 {{
             font-size: 0.875em;
-        }
-        
-        .markdown-body h6 {
+        }}
+
+        .markdown-body h6 {{
             font-size: 0.85em;
-            color: #8b949e;
-        }
-        
-        .markdown-body p {
+            color: {colors["blockquote_color"]};
+        }}
+
+        .markdown-body p {{
             margin-bottom: 16px;
-        }
-        
-        .markdown-body a {
-            color: #58a6ff;
+        }}
+
+        .markdown-body a {{
+            color: {colors["link_color"]};
             text-decoration: none;
-        }
-        
-        .markdown-body a:hover {
+        }}
+
+        .markdown-body a:hover {{
             text-decoration: underline;
-        }
-        
-        .markdown-body ul, .markdown-body ol {
+        }}
+
+        .markdown-body ul, .markdown-body ol {{
             padding-left: 2em;
             margin-bottom: 16px;
-        }
-        
-        .markdown-body li {
+        }}
+
+        .markdown-body li {{
             margin-bottom: 0.25em;
-        }
-        
-        .markdown-body blockquote {
+        }}
+
+        .markdown-body blockquote {{
             padding: 0 1em;
-            color: #8b949e;
-            border-left: 0.25em solid #30363d;
+            color: {colors["blockquote_color"]};
+            border-left: 0.25em solid {colors["border_color"]};
             margin-bottom: 16px;
-        }
-        
-        .markdown-body code {
+        }}
+
+        .markdown-body code {{
             padding: 0.2em 0.4em;
             margin: 0;
             font-size: 85%;
             background-color: rgba(110, 118, 129, 0.4);
             border-radius: 3px;
             font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-        }
-        
-        .markdown-body pre {
+        }}
+
+        .markdown-body pre {{
             padding: 16px;
             overflow: auto;
             font-size: 85%;
             line-height: 1.45;
-            background-color: #161b22;
+            background-color: {colors["code_bg_color"]};
             border-radius: 6px;
             margin-bottom: 16px;
-        }
-        
-        .markdown-body pre code {
+        }}
+
+        .markdown-body pre code {{
             display: inline;
             max-width: auto;
             padding: 0;
@@ -465,52 +429,52 @@ class MarkdownRenderer:
             word-wrap: normal;
             background-color: transparent;
             border: 0;
-        }
-        
-        .markdown-body table {
+        }}
+
+        .markdown-body table {{
             border-spacing: 0;
             border-collapse: collapse;
             margin-bottom: 16px;
-        }
-        
-        .markdown-body table th, .markdown-body table td {
+        }}
+
+        .markdown-body table th, .markdown-body table td {{
             padding: 6px 13px;
-            border: 1px solid #30363d;
-        }
-        
-        .markdown-body table th {
+            border: 1px solid {colors["border_color"]};
+        }}
+
+        .markdown-body table th {{
             font-weight: 600;
-            background-color: #161b22;
-        }
-        
-        .markdown-body table tr:nth-child(2n) {
-            background-color: #0d1117;
-        }
-        
-        .markdown-body hr {
+            background-color: {colors["code_bg_color"]};
+        }}
+
+        .markdown-body table tr:nth-child(2n) {{
+            background-color: {colors["background_color"]};
+        }}
+
+        .markdown-body hr {{
             height: 0.25em;
             padding: 0;
             margin: 24px 0;
-            background-color: #30363d;
+            background-color: {colors["border_color"]};
             border: 0;
-        }
-        
-        .highlight {
-            background-color: #161b22;
+        }}
+
+        .highlight {{
+            background-color: {colors["code_bg_color"]};
             border-radius: 6px;
             padding: 16px;
             margin-bottom: 16px;
             overflow-x: auto;
-        }
-        
-        .highlight pre {
+        }}
+
+        .highlight pre {{
             background-color: transparent;
             padding: 0;
             margin: 0;
             overflow: visible;
-        }
-        
-        /* Dark theme syntax highlighting */
+        }}
+
+        /* Syntax highlighting */
         .hll { background-color: #404040 }
         .c { color: #6a9955; font-style: italic }
         .err { color: #f44747 }
