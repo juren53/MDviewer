@@ -858,7 +858,7 @@ class MainWindow(QMainWindow):
 
         view_menu.addSeparator()
 
-        color_settings_action = QAction("&Element Colors...", self)
+        color_settings_action = QAction("&Customize Colors...", self)
         color_settings_action.setStatusTip("Customize document element colors")
         color_settings_action.triggered.connect(self.show_color_settings)
         view_menu.addAction(color_settings_action)
