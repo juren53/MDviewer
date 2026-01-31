@@ -1300,6 +1300,28 @@ class MainWindow(QMainWindow):
                 self.settings.setValue(key, val)
             self.settings.endGroup()
 
+    def reset_all_themes_to_factory(self):
+        """Factory reset - clear ALL custom color settings for ALL themes."""
+        # Get all available themes from registry
+        registry = get_theme_registry()
+        available_themes = registry.get_theme_names()
+        
+        # Clear QSettings for all themes
+        for theme in available_themes:
+            self.settings.beginGroup(f"custom_colors/{theme}")
+            self.settings.remove("")  # Remove all keys in this group
+            self.settings.endGroup()
+        
+        # Clear in-memory custom colors
+        self.custom_colors = {theme: {} for theme in available_themes}
+        
+        # Re-apply renderer settings with no custom colors
+        self._apply_custom_colors_to_renderer()
+        
+        # Refresh display
+        self._refresh_current_document()
+        self._apply_text_browser_stylesheet()
+
     def _apply_custom_colors_to_renderer(self):
         """Push the current theme's custom colors into the renderer."""
         self.renderer.custom_colors = dict(

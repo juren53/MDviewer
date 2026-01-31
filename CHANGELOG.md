@@ -5,6 +5,34 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-01-30 2047 CST
+
+### Added
+- **Factory Reset for Themes** - Complete theme customization reset capability
+  - **Factory Reset All Themes Button**: New prominent red button in Color Settings dialog
+  - **Confirmation Dialog**: Warns users before clearing ALL theme customizations
+  - **Complete Reset**: Clears custom colors for all themes in one action
+  - **Immediate Effect**: Restores all themes to factory defaults instantly
+  - **Safety Warning**: "This action cannot be undone" confirmation required
+
+### Enhanced
+- **Color Settings Dialog** - Improved theme reset controls
+  - **Two Reset Options**: "Reset to Defaults" (current theme) and "Factory Reset All Themes" (all themes)
+  - **Visual Distinction**: Factory reset button styled in red to indicate destructive action
+  - **Clear Tooltips**: Users understand the difference between reset options
+  - **Better Organization**: Reset buttons grouped together in dialog footer
+
+### Technical
+- **New MainWindow Method**: `reset_all_themes_to_factory()` clears all QSettings theme groups
+  - Iterates through all available themes from theme registry
+  - Removes all custom color settings from QSettings
+  - Clears in-memory custom_colors dictionary
+  - Re-applies renderer settings and refreshes display
+- **Enhanced ColorSettingsDialog**: `_factory_reset_all_themes()` method with user confirmation
+- **QSettings Cleanup**: Comprehensive removal of custom_colors/{theme} groups
+
+---
+
 ## [0.0.9] - 2026-01-30 1840 CST
 
 ### Added

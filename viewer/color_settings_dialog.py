@@ -119,13 +119,28 @@ class ColorSettingsDialog(QDialog):
         button_layout = QHBoxLayout()
 
         reset_btn = QPushButton("Reset to Defaults")
-        reset_btn.setToolTip("Restore all colors to their default values")
+        reset_btn.setToolTip("Restore all colors to their default values for current theme")
         reset_btn.clicked.connect(self._reset_to_defaults)
+
+        factory_reset_btn = QPushButton("Factory Reset All Themes")
+        factory_reset_btn.setToolTip("Clear ALL customizations for ALL themes and restore factory defaults")
+        factory_reset_btn.clicked.connect(self._factory_reset_all_themes)
+        factory_reset_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #8b0000;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #a52a2a;
+            }
+        """)
 
         close_btn = QPushButton("Close")
         close_btn.clicked.connect(self.accept)
 
         button_layout.addWidget(reset_btn)
+        button_layout.addWidget(factory_reset_btn)
         button_layout.addStretch()
         button_layout.addWidget(close_btn)
 
@@ -218,6 +233,36 @@ class ColorSettingsDialog(QDialog):
         """Reset all colors to theme defaults."""
         self._load_theme_colors()
         self.colors_changed.emit(dict(self.current_colors))
+
+    def _factory_reset_all_themes(self):
+        """Factory reset all themes - clear ALL custom color settings."""
+        from PyQt6.QtWidgets import QMessageBox
+        
+        # Confirm with user
+        reply = QMessageBox.question(
+            self,
+            "Factory Reset All Themes",
+            "This will clear ALL color customizations for ALL themes and restore factory defaults.\n\n"
+            "This action cannot be undone.\n\n"
+            "Are you sure you want to continue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            # Signal to parent window to perform factory reset
+            if self.parent():
+                self.parent().reset_all_themes_to_factory()
+                # Reload current theme colors
+                self._load_theme_colors()
+                self.colors_changed.emit(dict(self.current_colors))
+                
+                QMessageBox.information(
+                    self,
+                    "Factory Reset Complete",
+                    "All theme customizations have been cleared.\n"
+                    "All themes have been restored to factory defaults."
+                )
 
     def _update_button_color(self, button, hex_color):
         """Set a button's background to display the given color as a swatch."""
