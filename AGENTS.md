@@ -9,7 +9,7 @@ MDviewer is a PyQt6-based Markdown viewer with GitHub-style rendering. The appli
 ## Common Commands
 
 ### Development
-```powershell
+```bash
 # Run the application
 python main.py
 
@@ -21,14 +21,14 @@ python -m viewer.main_window
 ```
 
 ### Testing
-```powershell
+```bash
 # Run renderer tests
 python tests/test_renderer.py
 
-# Test GitHub version checker
+# Test GitHub version checker (standalone module test)
 python github_version_checker.py
 
-# Test Git updater
+# Test Git updater (standalone module test)
 python git_updater.py
 
 # Test Release downloader
@@ -40,18 +40,18 @@ python test_update_dialog.py
 ```
 
 ### Building
-```powershell
-# Windows: Build executable
-.\build.bat
-
-# Linux/macOS: Build executable
+```bash
+# Linux: Build executable
 ./build.sh
 
-# Manual PyInstaller build
+# Windows: Build executable (use Windows shell)
+.\build.bat
+
+# Both scripts clean build/dist directories and run:
 pyinstaller --clean MDviewer.spec
 ```
 
-The build process uses PyInstaller with a spec file that bundles all dependencies including PyQt6, markdown, and Pygments. The output is a single executable in `dist/MDviewer.exe` (Windows) or `dist/MDviewer` (Linux/macOS).
+Note: The PyInstaller spec file (`MDviewer.spec`) is dynamically generated - not tracked in version control. Create it via `pyinstaller --onefile main.py` then customize as needed.
 
 ### Installation
 ```powershell
@@ -87,15 +87,19 @@ The timezone MUST always be CST/CDT per project rules. When updating versions, m
 The application has a sophisticated update system with three complementary modules:
 
 1. **GitHubVersionChecker** (`github_version_checker.py`): Checks GitHub releases API for new versions
-   - Performs async version checks via threading
+   - Designed as reusable module for PyQt5/PyQt6 applications
+   - Performs async version checks via threading with callbacks
    - Compares semantic versions with prerelease support (alpha, beta, rc)
-   - Returns `VersionCheckResult` with update information
+   - 10-second network timeout by default
+   - Returns `VersionCheckResult` dataclass with update information
+   - Uses urllib only (no external dependencies)
 
 2. **GitUpdater** (`git_updater.py`): Performs local git repository updates (for git installations)
    - Uses "force update" strategy: `git fetch` + `git reset --hard origin/main`
    - 30-second timeout on all git operations
-   - Reads version from `version.py` before and after update
-   - Returns `GitUpdateResult` with success/failure information
+   - Reads version from `version.py` before and after update via regex
+   - Returns `GitUpdateResult` dataclass with success/failure information
+   - Repository detection via `.git` directory check
 
 3. **ReleaseDownloader** (`release_downloader.py`): Downloads and installs release archives (for non-git installations)
    - Downloads release archives (ZIP on Windows, tar.gz on Linux) from GitHub
@@ -113,6 +117,12 @@ QSettings is used throughout the application with organization name "MDviewer":
 - Window geometry and position
 - Last opened file path
 - Theme preference ("dark" or "light")
+- Paragraph marks visibility ("hide_paragraph_marks" boolean)
+
+Settings are stored in platform-specific locations:
+- Linux: `~/.config/MDviewer/MDviewer.conf`
+- Windows: Registry under `HKEY_CURRENT_USER\Software\MDviewer\MDviewer`
+- macOS: `~/Library/Preferences/com.MDviewer.MDviewer.plist`
 
 ## Important Conventions
 
@@ -142,12 +152,12 @@ viewer/
 The `MarkdownRenderer` uses these python-markdown extensions:
 - `tables`: GitHub-style tables
 - `fenced_code`: Fenced code blocks with language specifiers
-- `codehilite`: Pygments syntax highlighting
-- `toc`: Table of contents generation
+- `codehilite`: Pygments syntax highlighting with "highlight" CSS class
+- `toc`: Table of contents generation with permalink support
 - `nl2br`: Newline to `<br>` conversion
-- `attr_list`: Attribute lists
+- `attr_list`: Attribute lists for custom styling
 
-Code highlighting uses Pygments with the "highlight" CSS class.
+Code highlighting uses Pygments. Extension configs are defined in `MarkdownRenderer.__init__()` including permalink generation and CSS class names.
 
 ### PyQt6 Specifics
 - High DPI support is enabled by default in PyQt6 (no manual configuration needed)
@@ -155,13 +165,28 @@ Code highlighting uses Pygments with the "highlight" CSS class.
 - Signal/slot connections use modern PyQt6 syntax: `signal.connect(slot)`
 - Enums use fully qualified names: `Qt.AlignmentFlag.AlignCenter`, `QFont.Weight.Bold`
 
+## Additional Features
+
+### Find/Search Functionality
+- Search dialog is theme-aware (recreated on theme changes)
+- Highlighting: Current match in yellow, other matches in orange (dark theme) or blue (light theme)
+- Uses `QTextCursor` for selection management
+- Search state preserved across document navigation
+
+### Paragraph Marks
+- Toggle visibility via View → Hide Paragraph Marks (Ctrl+P)
+- Pilcrow (¶) symbols on headers, period (.) marks on content
+- Uses CSS class `.paragraph-mark` for styling
+- Protected from insertion into code blocks
+- Headerlinks (`.headerlink`) removed when marks hidden (workaround for QTextBrowser CSS limitation)
+
 ## File Size Optimization
 The application is optimized for small markdown files (<1MB). Large files may experience slower rendering due to syntax highlighting overhead from Pygments.
 
 ## Build Configuration
-The `MDviewer.spec` file includes:
+Note: The `MDviewer.spec` file is not in version control. When building, the spec file should include:
 - Hidden imports for PyQt6 modules, markdown extensions, and Pygments
 - Icon configuration (uses `assets/icons/icon.ico` if available)
 - Console disabled for GUI-only mode
 - UPX compression enabled
-- Single-file executable output
+- Single-file executable output (`--onefile`)
