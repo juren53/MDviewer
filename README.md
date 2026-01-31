@@ -38,7 +38,7 @@ A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
 
 ## Version
 
-**v0.0.8 2026-01-30 2230 CST**
+**v0.0.9 2026-01-30 1840 CST**
 
 ## Usage
 

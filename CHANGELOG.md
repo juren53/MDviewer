@@ -5,6 +5,49 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.9] - 2026-01-30 1840 CST
+
+### Added
+- **Non-Git Update Support** - Automatic updates now work for both git and non-git installations
+  - **ReleaseDownloader Module**: New standalone module for downloading GitHub releases
+  - **Archive Support**: Downloads ZIP files on Windows, tar.gz on Linux/macOS
+  - **Installation Detection**: Automatically detects git vs non-git installations
+  - **Dual Update Paths**: Uses GitUpdater for git repos, ReleaseDownloader for archives
+  - **Update Method Display**: Version comparison dialog shows update method ("via git pull" or "via GitHub release download")
+- **Backup System** - Safe updates with automatic backup and rollback
+  - **Timestamped Backups**: Creates backup_{version}_{timestamp} before each update
+  - **Backup Retention**: Automatically keeps last 3 backups, removes older ones
+  - **Automatic Rollback**: Restores from backup if update fails
+  - **Smart Exclusions**: Excludes .git, .backups, __pycache__ from backups
+
+### Enhanced
+- **Update Dialogs** - Enhanced for both update methods
+  - **Progress Tracking**: New set_download_progress() method for download progress
+  - **Method Indication**: Shows "via git pull" or "via GitHub release download" in dialogs
+  - **Unified Experience**: Both git and non-git updates use same dialog system
+
+### Technical
+- **New ReleaseDownloader Class** (`release_downloader.py`) - Complete release download system
+  - **download_release()**: Downloads release archives from GitHub with 30s timeout
+  - **extract_archive()**: Safely extracts ZIP/tarball with validation
+  - **backup_installation()**: Creates timestamped backups with retention policy
+  - **apply_update()**: Replaces application files preserving permissions
+  - **rollback()**: Restores from backup on failure
+  - **cleanup()**: Removes temporary files after update
+- **Enhanced Main Window**: Installation type detection and update method branching
+- **Cross-Platform**: Automatic platform detection for archive format selection
+- **Test Suite**: New test_release_downloader.py for validation
+- **Documentation**: Updated AGENTS.md with complete update system architecture
+
+### Safety Features
+- Archive integrity validation (file size > 0)
+- Version file existence check in extracted archives
+- Network timeout handling (30 seconds)
+- Automatic error recovery with rollback
+- Detailed error messages for debugging
+
+---
+
 ## [0.0.8] - 2026-01-30 2230 CST
 
 ### Added

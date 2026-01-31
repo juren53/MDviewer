@@ -31,6 +31,10 @@ python github_version_checker.py
 # Test Git updater
 python git_updater.py
 
+# Test Release downloader
+python release_downloader.py
+python test_release_downloader.py
+
 # Test update dialogs
 python test_update_dialog.py
 ```
@@ -80,20 +84,28 @@ All version information is centralized in `version.py`:
 The timezone MUST always be CST/CDT per project rules. When updating versions, modify `version.py` and update the README.md file.
 
 ### Update System Architecture
-The application has a sophisticated update system with two complementary modules:
+The application has a sophisticated update system with three complementary modules:
 
 1. **GitHubVersionChecker** (`github_version_checker.py`): Checks GitHub releases API for new versions
    - Performs async version checks via threading
    - Compares semantic versions with prerelease support (alpha, beta, rc)
    - Returns `VersionCheckResult` with update information
 
-2. **GitUpdater** (`git_updater.py`): Performs local git repository updates
+2. **GitUpdater** (`git_updater.py`): Performs local git repository updates (for git installations)
    - Uses "force update" strategy: `git fetch` + `git reset --hard origin/main`
    - 30-second timeout on all git operations
    - Reads version from `version.py` before and after update
    - Returns `GitUpdateResult` with success/failure information
 
-Update dialogs (`viewer/update_dialogs.py`) provide UI for version comparison, progress tracking, and results.
+3. **ReleaseDownloader** (`release_downloader.py`): Downloads and installs release archives (for non-git installations)
+   - Downloads release archives (ZIP on Windows, tar.gz on Linux) from GitHub
+   - Creates timestamped backups before updates (keeps last 3)
+   - Validates archive integrity and version.py existence
+   - Provides automatic rollback on failure
+   - 30-second timeout on download operations
+   - Returns `ReleaseDownloadResult` with update information
+
+The main window automatically detects installation type (git vs non-git) and uses the appropriate updater. Update dialogs (`viewer/update_dialogs.py`) provide UI for version comparison, progress tracking, and results for both update methods.
 
 ### Settings Persistence
 QSettings is used throughout the application with organization name "MDviewer":

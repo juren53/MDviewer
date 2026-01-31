@@ -31,10 +31,11 @@ from git_updater import GitUpdateResult
 class VersionCompareDialog(QDialog):
     """Dialog for comparing current and latest versions"""
 
-    def __init__(self, check_result: VersionCheckResult, parent=None):
+    def __init__(self, check_result: VersionCheckResult, parent=None, update_method: str = "git"):
         super().__init__(parent)
         self.check_result = check_result
         self.should_update = False
+        self.update_method = update_method
 
         self.setWindowTitle("Update Available")
         self.setModal(True)
@@ -57,6 +58,13 @@ class VersionCompareDialog(QDialog):
         version_label.setFont(QFont("Arial", 12, QFont.Weight.Bold))
         version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         version_label.setStyleSheet("color: #4CAF50;")  # Green
+
+        # Update method info
+        method_text = "via git pull" if self.update_method == "git" else "via GitHub release download"
+        method_label = QLabel(f"Update method: {method_text}")
+        method_label.setFont(QFont("Arial", 9))
+        method_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        method_label.setStyleSheet("color: #8b949e;")  # Gray
 
         # Release notes
         notes_label = QLabel("Release Notes:")
@@ -85,6 +93,7 @@ class VersionCompareDialog(QDialog):
         # Add all widgets
         layout.addWidget(title_label)
         layout.addWidget(version_label)
+        layout.addWidget(method_label)
         layout.addWidget(notes_label)
         layout.addWidget(release_notes)
         layout.addLayout(button_layout)
@@ -266,6 +275,15 @@ class UpdateProgressDialog(QDialog):
     def update_status(self, message: str):
         """Update status message"""
         self.status_label.setText(message)
+
+    def set_download_progress(self, percent: int):
+        """Set download progress percentage (0-100)"""
+        if percent >= 0:
+            self.progress_bar.setRange(0, 100)
+            self.progress_bar.setValue(percent)
+        else:
+            # Indeterminate progress
+            self.progress_bar.setRange(0, 0)
 
 
 class UpdateResultDialog(QDialog):

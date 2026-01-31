@@ -48,6 +48,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from github_version_checker import GitHubVersionChecker
 from git_updater import GitUpdater
+from release_downloader import ReleaseDownloader
 from version import get_semver
 
 
@@ -675,6 +676,9 @@ class MainWindow(QMainWindow):
         self.version_checker = GitHubVersionChecker("juren53/MDviewer", get_semver())
         self.git_updater = GitUpdater(
             "https://github.com/juren53/MDviewer.git", "version.py"
+        )
+        self.release_downloader = ReleaseDownloader(
+            "juren53/MDviewer", "version.py"
         )
 
         self.setWindowTitle("MDviewer")
@@ -1435,28 +1439,22 @@ class MainWindow(QMainWindow):
         """Handler for 'Get Latest Version' menu action"""
         # Show progress dialog
         progress_dialog = UpdateProgressDialog(self)
-        progress_dialog.update_status("Checking repository status...")
+        progress_dialog.update_status("Checking for updates...")
         progress_dialog.show()
 
         # Add safety timeout (15 seconds)
         QTimer.singleShot(15000, lambda: self._check_timeout(progress_dialog))
 
-        # Check if we're in a git repository
-        if not self.git_updater.is_git_repository():
-            progress_dialog.close()
-            error_dialog = ErrorDialog(
-                "MDviewer installation is not a git repository.\n\n"
-                "To enable automatic updates, please install MDviewer from git:\n"
-                "git clone https://github.com/juren53/MDviewer.git\n\n"
-                "Alternatively, you can download updates manually from:\n"
-                "https://github.com/juren53/MDviewer/releases",
-                self,
-            )
-            error_dialog.exec()
-            return
+        # Detect installation type (git vs non-git)
+        self.is_git_install = self.git_updater.is_git_repository()
+        update_method = "git" if self.is_git_install else "download"
+        print(f"[DEBUG] Installation type: {update_method}")
 
-        # Try GitHub releases first, then fallback to git-based checking
-        progress_dialog.update_status("Checking for updates...")
+        # Update progress message based on method
+        if self.is_git_install:
+            progress_dialog.update_status("Checking for updates (git)...")
+        else:
+            progress_dialog.update_status("Checking for updates (GitHub releases)...")
 
         # Create signals object for thread communication
         signals = UpdateCheckSignals()
@@ -1615,12 +1613,15 @@ class MainWindow(QMainWindow):
     def _show_comparison_dialog(self, progress_dialog, check_result):
         """Show version comparison dialog (runs on main thread)"""
         progress_dialog.close()
-        comparison_dialog = VersionCompareDialog(check_result, self)
+        update_method = "git" if self.is_git_install else "download"
+        comparison_dialog = VersionCompareDialog(check_result, self, update_method)
 
         if (
             comparison_dialog.exec() == QDialog.DialogCode.Accepted
             and comparison_dialog.should_update
         ):
+            # Store version for download-based updates
+            self._update_version = check_result.latest_version
             # Perform update
             self._perform_update()
 
@@ -1633,12 +1634,30 @@ class MainWindow(QMainWindow):
     def _perform_update(self):
         """Perform the actual update process"""
         progress_dialog = UpdateProgressDialog(self)
-        progress_dialog.update_status("Updating MDviewer...")
+        
+        # Update message based on installation type
+        if self.is_git_install:
+            progress_dialog.update_status("Updating via git...")
+        else:
+            progress_dialog.update_status("Downloading update...")
+        
         progress_dialog.show()
 
         def update_in_background():
             try:
-                update_result = self.git_updater.force_update()
+                if self.is_git_install:
+                    # Use git updater
+                    update_result = self.git_updater.force_update()
+                else:
+                    # Use release downloader - get version from stored check result
+                    if hasattr(self, '_update_version'):
+                        update_result = self.release_downloader.perform_update(self._update_version)
+                    else:
+                        # Fallback error
+                        from git_updater import GitUpdateResult
+                        update_result = GitUpdateResult()
+                        update_result.success = False
+                        update_result.message = "Unable to determine update version"
 
                 # Update UI on main thread
                 QTimer.singleShot(
@@ -1661,7 +1680,23 @@ class MainWindow(QMainWindow):
         """Show update result dialog"""
         progress_dialog.close()
 
-        result_dialog = UpdateResultDialog(update_result, self)
+        # Convert ReleaseDownloadResult to GitUpdateResult format for dialog compatibility
+        from git_updater import GitUpdateResult
+        from release_downloader import ReleaseDownloadResult
+        
+        if isinstance(update_result, ReleaseDownloadResult):
+            # Convert to GitUpdateResult for dialog display
+            git_result = GitUpdateResult()
+            git_result.success = update_result.success
+            git_result.message = update_result.message
+            git_result.current_version = update_result.current_version
+            git_result.new_version = update_result.new_version
+            git_result.command_output = update_result.message
+            git_result.error_output = update_result.error_message
+            result_dialog = UpdateResultDialog(git_result, self)
+        else:
+            result_dialog = UpdateResultDialog(update_result, self)
+        
         result_dialog.exec()
 
         # If update was successful, suggest restart
