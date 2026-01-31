@@ -127,6 +127,36 @@ class ThemeRegistry:
             )
         )
 
+        # Solarized Dark Theme
+        self.register_theme(
+            Theme(
+                name="solarized_dark",
+                display_name="Solarized Dark",
+                content_colors=ThemeColors(
+                    heading_color="#93a1a1",
+                    body_text_color="#839496",
+                    background_color="#002b36",
+                    link_color="#268bd2",
+                    blockquote_color="#586e75",
+                    code_bg_color="#073642",
+                    border_color="#586e75",
+                ),
+                ui_palette=UIPalette(
+                    window_color="#073642",
+                    window_text_color="#839496",
+                    base_color="#002b36",
+                    alternate_base_color="#073642",
+                    text_color="#839496",
+                    button_color="#073642",
+                    button_text_color="#839496",
+                    highlight_color="#268bd2",
+                    highlighted_text_color="#fdf6e3",
+                ),
+                description="Solarized dark theme for comfortable reading",
+                category="Popular",
+            )
+        )
+
         # Solarized Light Theme
         self.register_theme(
             Theme(
@@ -213,6 +243,96 @@ class ThemeRegistry:
                     highlighted_text_color="#ffffff",
                 ),
                 description="Official GitHub theme colors",
+                category="Popular",
+            )
+        )
+
+        # Monokai Theme
+        self.register_theme(
+            Theme(
+                name="monokai",
+                display_name="Monokai",
+                content_colors=ThemeColors(
+                    heading_color="#f8f8f2",
+                    body_text_color="#f8f8f2",
+                    background_color="#272822",
+                    link_color="#66d9ef",
+                    blockquote_color="#75715e",
+                    code_bg_color="#3e3d32",
+                    border_color="#49483e",
+                ),
+                ui_palette=UIPalette(
+                    window_color="#272822",
+                    window_text_color="#f8f8f2",
+                    base_color="#1e1f1c",
+                    alternate_base_color="#3e3d32",
+                    text_color="#f8f8f2",
+                    button_color="#3e3d32",
+                    button_text_color="#f8f8f2",
+                    highlight_color="#a6e22e",
+                    highlighted_text_color="#272822",
+                ),
+                description="Classic Monokai theme with warm, vibrant colors",
+                category="Popular",
+            )
+        )
+
+        # Nord Theme
+        self.register_theme(
+            Theme(
+                name="nord",
+                display_name="Nord",
+                content_colors=ThemeColors(
+                    heading_color="#88c0d0",
+                    body_text_color="#d8dee9",
+                    background_color="#2e3440",
+                    link_color="#88c0d0",
+                    blockquote_color="#4c566a",
+                    code_bg_color="#3b4252",
+                    border_color="#4c566a",
+                ),
+                ui_palette=UIPalette(
+                    window_color="#2e3440",
+                    window_text_color="#d8dee9",
+                    base_color="#3b4252",
+                    alternate_base_color="#434c5e",
+                    text_color="#d8dee9",
+                    button_color="#434c5e",
+                    button_text_color="#d8dee9",
+                    highlight_color="#88c0d0",
+                    highlighted_text_color="#2e3440",
+                ),
+                description="Arctic, north-bluish clean and elegant theme",
+                category="Popular",
+            )
+        )
+
+        # One Dark Theme
+        self.register_theme(
+            Theme(
+                name="one_dark",
+                display_name="One Dark",
+                content_colors=ThemeColors(
+                    heading_color="#61afef",
+                    body_text_color="#abb2bf",
+                    background_color="#282c34",
+                    link_color="#61afef",
+                    blockquote_color="#5c6370",
+                    code_bg_color="#2c313c",
+                    border_color="#3e4452",
+                ),
+                ui_palette=UIPalette(
+                    window_color="#282c34",
+                    window_text_color="#abb2bf",
+                    base_color="#21252b",
+                    alternate_base_color="#2c313c",
+                    text_color="#abb2bf",
+                    button_color="#3e4452",
+                    button_text_color="#abb2bf",
+                    highlight_color="#61afef",
+                    highlighted_text_color="#282c34",
+                ),
+                description="Atom's iconic One Dark theme",
                 category="Popular",
             )
         )
