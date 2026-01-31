@@ -15,12 +15,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Immediate Effect**: Restores all themes to factory defaults instantly
   - **Safety Warning**: "This action cannot be undone" confirmation required
 
+### New Themes
+- **Monokai**: Classic warm dark theme with vibrant colors (`#272822` background, `#66d9ef` cyan links)
+- **Nord**: Arctic, north-bluish clean and elegant theme (`#2e3440` polar night background, `#88c0d0` frost accents)
+- **One Dark**: Atom's iconic dark theme (`#282c34` background, `#61afef` blue headings/links)
+- **Solarized Dark**: Dark variant of the Solarized palette (`#002b36` background, `#268bd2` blue links)
+
 ### Enhanced
 - **Color Settings Dialog** - Improved theme reset controls
   - **Two Reset Options**: "Reset to Defaults" (current theme) and "Factory Reset All Themes" (all themes)
   - **Visual Distinction**: Factory reset button styled in red to indicate destructive action
   - **Clear Tooltips**: Users understand the difference between reset options
   - **Better Organization**: Reset buttons grouped together in dialog footer
+- **Theme Library** - Expanded from 5 to 9 total themes
+  - Built-in: Dark, Light
+  - Popular: Solarized Dark, Solarized Light, Dracula, GitHub, Monokai, Nord, One Dark
 
 ### Technical
 - **New MainWindow Method**: `reset_all_themes_to_factory()` clears all QSettings theme groups
