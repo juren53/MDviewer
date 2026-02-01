@@ -665,6 +665,7 @@ class MainWindow(QMainWindow):
         self.renderer = MarkdownRenderer()
         self.settings = QSettings("MDviewer", "MDviewer")
         self.recent_files = []
+        self.recent_directories = []
         self.initial_file = initial_file
         self.find_dialog = None
         self.current_theme = (
@@ -698,6 +699,9 @@ class MainWindow(QMainWindow):
 
         # Load recent files from settings
         self.load_recent_files()
+
+        # Load recent directories from settings
+        self.load_recent_directories()
 
         self.setup_ui()
         self.setup_menu()
@@ -745,8 +749,12 @@ class MainWindow(QMainWindow):
         file_menu.addAction(open_action)
 
         # Recent Files submenu
-        self.recent_menu = file_menu.addMenu("Open &Recent")
+        self.recent_menu = file_menu.addMenu("Open Recent &Files")
         self.update_recent_files_menu()
+
+        # Recent Directories submenu
+        self.recent_dirs_menu = file_menu.addMenu("Open Recent &Directories")
+        self.update_recent_dirs_menu()
 
         file_menu.addSeparator()
 
@@ -1080,6 +1088,9 @@ class MainWindow(QMainWindow):
         self.update_recent_files_menu()
         self.save_recent_files()
 
+        # Also track the directory
+        self.add_to_recent_directories(os.path.dirname(file_path))
+
     def update_recent_files_menu(self):
         """Update the recent files menu."""
         self.recent_menu.clear()
@@ -1142,6 +1153,82 @@ class MainWindow(QMainWindow):
         self.update_recent_files_menu()
         self.save_recent_files()
 
+    def load_recent_directories(self):
+        """Load recent directories from QSettings."""
+        recent_dirs = self.settings.value("recent_directories", [])
+        if isinstance(recent_dirs, list):
+            self.recent_directories = recent_dirs
+        else:
+            self.recent_directories = []
+
+    def save_recent_directories(self):
+        """Save recent directories to QSettings."""
+        self.settings.setValue(
+            "recent_directories", self.recent_directories[:5]
+        )
+
+    def add_to_recent_directories(self, dir_path):
+        """Add a directory to the recent directories list."""
+        if not dir_path:
+            return
+
+        # Remove if already exists
+        if dir_path in self.recent_directories:
+            self.recent_directories.remove(dir_path)
+
+        # Add to beginning
+        self.recent_directories.insert(0, dir_path)
+
+        # Keep only the most recent 5
+        self.recent_directories = self.recent_directories[:5]
+
+        # Update menu and save
+        self.update_recent_dirs_menu()
+        self.save_recent_directories()
+
+    def update_recent_dirs_menu(self):
+        """Update the recent directories menu."""
+        self.recent_dirs_menu.clear()
+
+        if not self.recent_directories:
+            no_dirs_action = QAction("No recent directories", self)
+            no_dirs_action.setEnabled(False)
+            self.recent_dirs_menu.addAction(no_dirs_action)
+        else:
+            for i, dir_path in enumerate(self.recent_directories):
+                if os.path.isdir(dir_path):
+                    action = QAction(f"{i + 1}. {dir_path}", self)
+                    action.setData(dir_path)
+                    action.setStatusTip(dir_path)
+                    action.triggered.connect(
+                        lambda checked, path=dir_path: self.open_from_recent_directory(path)
+                    )
+                    self.recent_dirs_menu.addAction(action)
+
+        if self.recent_directories:
+            self.recent_dirs_menu.addSeparator()
+            clear_action = QAction("Clear Recent Directories", self)
+            clear_action.triggered.connect(self.clear_recent_directories)
+            self.recent_dirs_menu.addAction(clear_action)
+
+    def open_from_recent_directory(self, dir_path):
+        """Open a file dialog starting in the selected recent directory."""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Markdown File",
+            dir_path,
+            "Markdown Files (*.md *.markdown);;All Files (*)",
+        )
+
+        if file_path:
+            self.load_file_from_path(file_path)
+
+    def clear_recent_directories(self):
+        """Clear the recent directories list."""
+        self.recent_directories.clear()
+        self.update_recent_dirs_menu()
+        self.save_recent_directories()
+
     def keyPressEvent(self, event):
         """Handle keyboard shortcuts — 'b' pages backward (like less)."""
         if event.key() == Qt.Key.Key_B and not event.modifiers():
@@ -1157,6 +1244,7 @@ class MainWindow(QMainWindow):
         # Save window settings when closing
         self.save_window_settings()
         self.save_recent_files()
+        self.save_recent_directories()
 
         # Save current theme preference
         self.settings.setValue("current_theme", self.current_theme)

@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-01-30 2047 CST
 
 ### Added
+- **Open Recent Directories** - Quick access to directories of previously opened files
+  - New "Open Recent Directories" submenu in File menu (up to 5 entries)
+  - Selecting a directory opens a file dialog starting in that location
+  - Directories automatically tracked whenever a file is opened
+  - "Clear Recent Directories" option to reset the list
+  - Persisted across sessions via QSettings
+- **Renamed "Open Recent" to "Open Recent Files"** for clarity alongside the new directories submenu
 - **Factory Reset for Themes** - Complete theme customization reset capability
   - **Factory Reset All Themes Button**: New prominent red button in Color Settings dialog
   - **Confirmation Dialog**: Warns users before clearing ALL theme customizations
