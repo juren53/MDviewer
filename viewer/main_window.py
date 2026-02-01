@@ -684,6 +684,10 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("MDviewer")
 
+        # Set window icon via IconLoader
+        from icon_loader import icons
+        self.setWindowIcon(icons.app_icon())
+
         # Load window geometry and state from settings
         self.load_window_settings()
 
