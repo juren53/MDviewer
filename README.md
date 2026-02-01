@@ -1,24 +1,32 @@
 # MDviewer
 
-A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
+**v0.1.1 2026-02-01**
+
+A PyQt6-based Markdown viewer with GitHub-style rendering, multi-theme support,
+and cross-platform icon management.
 
 ## Features
 
 - **GitHub-style markdown rendering** with authentic CSS styling
 - **Syntax highlighting** for code blocks using Pygments
-- **Conventional menu system**: File, Edit, View, Help
-- **Recent files** support with persistent storage
-- **Zoom controls** for better readability
+- **Multi-theme system**: 9 themes across Built-in and Popular categories
+  - Built-in: Dark, Light
+  - Popular: Solarized Dark, Solarized Light, Dracula, GitHub, Monokai, Nord, One Dark
+  - Ctrl+T toggle between dark and light
+  - Live theme switching without application restart
+- **Theme customization**: Per-theme color overrides with live preview
+  - 7 customizable elements: headings, body text, background, links, blockquotes, code blocks, borders
+  - Factory reset for individual themes or all themes at once
+- **Cross-platform icon support** via [Icon_Manager_Module](https://github.com/juren53/Icon_Manager_Module)
+  - Platform-aware icon selection (`.ico`, `.icns`, `.png`)
+  - Windows taskbar icon fix (no more generic Python icon)
+- **Find in document** (Ctrl+F) with match highlighting and navigation
+- **Recent files** and **recent directories** with persistent storage
+- **Hide paragraph marks** toggle (Ctrl+P)
 - **Session restore**: Opens last viewed file on startup
 - **Command-line support**: Load files directly from terminal
-- **Quick reference dialog**: Keyboard shortcuts and markdown syntax
-- **Multi-theme system**: 5 built-in themes with dynamic loading
-  - Dark/Light themes with Ctrl+T toggle (backward compatible)
-  - Solarized Light, Dracula, GitHub themes for variety
-  - Theme categories: Built-in and Popular themes
-  - Live theme switching without application restart
-- **Theme customization**: Per-theme color customization with live preview
-- **Theme persistence**: Saves theme preference and custom colors across sessions
+- **Zoom controls** (Ctrl++, Ctrl+-, Ctrl+0)
+- **Update checker**: Check for and install latest version from GitHub
 - **Optimized for small files** (<1MB) with fast loading
 
 ## Requirements
@@ -36,10 +44,6 @@ A simple PyQt6-based Markdown viewer with GitHub-style rendering capabilities.
    pip install -r requirements.txt
    ```
 
-## Version
-
-**v0.0.9 2026-01-30 1840 CST**
-
 ## Usage
 
 Run the application:
@@ -52,30 +56,30 @@ Or open a file directly:
 python main.py yourfile.md
 ```
 
-Or use it as a module:
-```bash
-python -m viewer.main_window
-```
-
 ## Menu Structure
 
 ### File
 - **Open** (Ctrl+O): Open a markdown file
-- **Open Recent**: Recent files list (max 10)
+- **Open Recent Files**: Recent files list (max 10)
+- **Open Recent Directories**: Quick access to previously used directories
 - **Exit** (Ctrl+Q): Close the application
 
 ### Edit
+- **Find...** (Ctrl+F): Search text in document
 - **Copy** (Ctrl+C): Copy selected text
-- **Select All** (Ctrl+A): Select all text in the viewer
+- **Select All** (Ctrl+A): Select all text
 
 ### View
-- **Zoom In** (Ctrl++): Increase font size
-- **Zoom Out** (Ctrl+-): Decrease font size
-- **Reset Zoom** (Ctrl+0): Reset font to default size
+- **Zoom In/Out/Reset** (Ctrl++, Ctrl+-, Ctrl+0)
+- **Theme**: Select from 9 themes organized by category
+- **Toggle Dark/Light** (Ctrl+T)
+- **Hide Paragraph Marks** (Ctrl+P)
+- **Customize Colors...**: Per-theme color customization dialog
 
 ### Help
 - **Quick Reference**: Keyboard shortcuts and markdown syntax
-- **Changelog**: View version history and changes
+- **Changelog**: View version history
+- **Get Latest Version** (Ctrl+U): Check for and install updates
 - **About**: Application information
 
 ## Supported Markdown Features
@@ -94,15 +98,35 @@ python -m viewer.main_window
 
 ```
 MDviewer/
-├── main.py                 # Application entry point
-├── requirements.txt        # Python dependencies
+├── main.py                      # Application entry point
+├── version.py                   # Centralized version management
+├── icon_loader.py               # Cross-platform icon loader (from Icon_Manager_Module)
+├── requirements.txt             # Python dependencies
+├── MDviewer.spec                # PyInstaller build configuration
+├── MDviewer.desktop             # Linux desktop integration
+├── git_updater.py               # Git-based update system
+├── github_version_checker.py    # GitHub release version checker
+├── release_downloader.py        # GitHub release download/install
 ├── viewer/
 │   ├── __init__.py
-│   ├── main_window.py      # Main application window
-│   └── markdown_renderer.py # Markdown parsing and rendering
+│   ├── main_window.py           # Main application window
+│   ├── markdown_renderer.py     # Markdown parsing and rendering
+│   ├── theme_manager.py         # Theme registry and palette management
+│   ├── color_settings_dialog.py # Color customization dialog
+│   └── update_dialogs.py        # Update checker UI dialogs
+├── resources/
+│   └── icons/                   # Generated cross-platform icon assets
+│       ├── app.ico              # Windows taskbar/window icon
+│       ├── app.icns             # macOS dock icon
+│       ├── app.png              # Linux default icon
+│       └── app_16x16.png … app_256x256.png
+├── assets/
+│   └── icons/                   # Original source icon files
 ├── tests/
-│   └── test_renderer.py    # Unit tests for renderer
-└── README.md               # This file
+│   └── test_renderer.py         # Unit tests for renderer
+├── CHANGELOG.md
+├── AGENTS.md                    # Guide for AI agents working in this repo
+└── README.md
 ```
 
 ## Testing
