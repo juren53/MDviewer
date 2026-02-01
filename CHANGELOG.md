@@ -5,6 +5,25 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-02-01
+
+### Added
+- **Icon Manager Module integration** — cross-platform icon support via [Icon_Manager_Module](https://github.com/juren53/Icon_Manager_Module)
+  - `icon_loader.py` and generated icon assets in `resources/icons/`
+  - Application icon set on `QApplication` (appears in Alt-Tab, dock, etc.)
+  - Window icon set on `MainWindow` (appears in title bar)
+  - Windows taskbar icon fix via `set_taskbar_icon()` — resolves the long-standing issue of Python's generic icon appearing on the Windows taskbar instead of the MDviewer icon
+  - Platform-aware icon selection: `.ico` on Windows, `.icns` on macOS, multi-resolution PNGs on Linux
+  - Silent no-op on non-Windows platforms, so the taskbar fix call is safe in cross-platform code
+
+### Technical
+- 3 new lines in `main.py`: import, `app.setWindowIcon()`, `icons.set_taskbar_icon()`
+- 2 new lines in `viewer/main_window.py`: import and `self.setWindowIcon()`
+- 10 generated icon files in `resources/icons/` (app.ico, app.icns, app.png, 7 sized PNGs)
+- AppUserModelID set to `com.mdviewer.mdviewer` for Windows taskbar grouping
+
+---
+
 ## [0.1.0] - 2026-01-30 2047 CST
 
 ### Added
