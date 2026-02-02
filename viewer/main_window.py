@@ -58,6 +58,8 @@ class AboutDialog(QDialog):
         self.setWindowTitle("About MDviewer")
         self.setModal(True)
         self.setFixedSize(400, 300)
+        if parent:
+            self.setWindowIcon(parent.windowIcon())
 
         layout = QVBoxLayout()
 
