@@ -14,6 +14,7 @@ def main():
     app.setApplicationName("MDviewer")
     app.setApplicationVersion(get_semver())
     app.setOrganizationName("MDviewer")
+    app.setDesktopFileName("MDviewer")
 
     # Apply Fusion style for consistent theming
     app.setStyle("Fusion")
