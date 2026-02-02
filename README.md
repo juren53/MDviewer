@@ -1,6 +1,6 @@
 # MDviewer
 
-**v0.1.1 2026-02-01**
+**v0.1.2 2026-02-02**
 
 A PyQt6-based Markdown viewer with GitHub-style rendering, multi-theme support,
 and cross-platform icon management.
@@ -20,6 +20,7 @@ and cross-platform icon management.
 - **Cross-platform icon support** via [Icon_Manager_Module](https://github.com/juren53/Icon_Manager_Module)
   - Platform-aware icon selection (`.ico`, `.icns`, `.png`)
   - Windows taskbar icon fix (no more generic Python icon)
+  - Linux XDG hicolor theme integration for reliable icons in app launcher, taskbar, and window switcher
 - **Find in document** (Ctrl+F) with match highlighting and navigation
 - **Recent files** and **recent directories** with persistent storage
 - **Hide paragraph marks** toggle (Ctrl+P)
