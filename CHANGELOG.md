@@ -5,6 +5,20 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-02-02
+
+### Fixed
+- **Blank icons on Linux (LMDE / Cinnamon)** — all icons (app launcher, taskbar, window switcher) were blank after the Icon_Manager_Module integration
+  - Root cause: the installed `.desktop` file had a broken absolute path for `Icon=` (missing `icons/` subdirectory)
+  - Installed multi-resolution PNGs into the XDG hicolor icon theme (`~/.local/share/icons/hicolor/<size>/apps/mdviewer.png`)
+  - Changed `.desktop` `Icon=` from an absolute path to the theme name `mdviewer` — portable and resilient to directory changes
+  - Installed updated `.desktop` file to `~/.local/share/applications/`
+
+### Added
+- `app.setDesktopFileName("MDviewer")` in `main.py` — required for Linux desktop environments to associate the running window with its `.desktop` file (fixes blank taskbar and Alt+Tab icons)
+
+---
+
 ## [0.1.1] - 2026-02-01
 
 ### Added
