@@ -109,6 +109,37 @@ Additional changes:
 
 ---
 
+## Title bar icon investigation
+
+After the XDG hicolor fix, the title bar icon was still not visible. Investigation
+revealed this is **not an application issue** — it is a Cinnamon window manager
+configuration and theme behavior:
+
+1. **`button-layout` had no `menu` entry.** The Cinnamon `button-layout` was set to
+   `':minimize,maximize,close'` with nothing on the left side. Without `menu` in
+   the layout, no application shows a title bar icon. Enabled it via:
+   ```
+   gsettings set org.cinnamon.desktop.wm.preferences button-layout 'menu:minimize,maximize,close'
+   ```
+
+2. **Mint-Y theme uses a hamburger icon.** After enabling `menu`, the title bar
+   showed a generic three-line hamburger icon instead of the app icon. This is how
+   the Mint-Y window manager theme renders the window menu button for all
+   applications — it does not display per-application icons. A different WM theme
+   would be needed to show app-specific icons in the title bar.
+
+3. **About dialog was missing `setWindowIcon()`.** The `AboutDialog` class never
+   set a window icon. Fixed by inheriting the parent window's icon:
+   `self.setWindowIcon(parent.windowIcon())`.
+
+### Additional commit
+
+| Hash | Description |
+|------|-------------|
+| `b0f4c82` | Fix missing icon in About dialog by inheriting from parent window |
+
+---
+
 ## Key findings
 
 - **Absolute paths in `.desktop` `Icon=` are fragile.** Any directory restructuring
@@ -120,6 +151,10 @@ Additional changes:
 - **Linux has four independent icon display points** (title bar, app launcher,
   taskbar, Alt+Tab) that each use different lookup mechanisms and can fail
   independently.
+- **Title bar icon display is controlled by the window manager theme.** Cinnamon's
+  Mint-Y theme renders a generic hamburger menu icon regardless of the app icon.
+  The `button-layout` gsetting must include `menu` to show any title bar icon at
+  all, and even then the icon style depends on the WM theme, not the application.
 
 ---
 
@@ -127,6 +162,6 @@ Additional changes:
 
 | | MDviewer | Icon_Manager_Module | Combined |
 |---|---|---|---|
-| Files modified | 4 | 4 | 8 |
-| Commits | 4 | 2 | 6 |
+| Files modified | 5 | 4 | 9 |
+| Commits | 5 | 2 | 7 |
 | Releases | 1 (v0.1.2) | 1 (v0.3.2) | 2 |
