@@ -5,7 +5,7 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.2] - 2026-02-02
+## [0.1.2] - 2026-02-02 1509 CST
 
 ### Fixed
 - **Blank icons on Linux (LMDE / Cinnamon)** — all icons (app launcher, taskbar, window switcher) were blank after the Icon_Manager_Module integration
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1] - 2026-02-01
+## [0.1.1] - 2026-02-01 1522 CST
 
 ### Added
 - **Icon Manager Module integration** — cross-platform icon support via [Icon_Manager_Module](https://github.com/juren53/Icon_Manager_Module)
@@ -288,7 +288,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.2] - 2026-01-24
+## [0.0.2] - 2026-01-24 2035 CST
 
 ### Added
 - Session restore: reopens last viewed file on startup
@@ -297,7 +297,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.1] - 2025-01-24
+## [0.0.1] - 2026-01-24 1920 CST
 
 ### Added
 - Initial release of MDviewer PyQt6 application
