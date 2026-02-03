@@ -898,6 +898,14 @@ class MainWindow(QMainWindow):
         # View Menu
         view_menu = menubar.addMenu("&View")
 
+        refresh_action = QAction("&Refresh", self)
+        refresh_action.setShortcut("F5")
+        refresh_action.setStatusTip("Reload the current document")
+        refresh_action.triggered.connect(self._refresh_current_document)
+        view_menu.addAction(refresh_action)
+
+        view_menu.addSeparator()
+
         zoom_in_action = QAction("Zoom &In", self)
         zoom_in_action.setShortcut("Ctrl++")
         zoom_in_action.setStatusTip("Increase font size")
@@ -972,6 +980,13 @@ class MainWindow(QMainWindow):
         toggle_theme_action.triggered.connect(self.toggle_theme)
         theme_menu.addAction(toggle_theme_action)
 
+        view_menu.addSeparator()
+
+        color_settings_action = QAction("&Customize Colors...", self)
+        color_settings_action.setStatusTip("Customize document element colors")
+        color_settings_action.triggered.connect(self.show_color_settings)
+        view_menu.addAction(color_settings_action)
+
         # Hide paragraph marks action
         hide_marks_action = QAction("Hide Paragraph Marks", self)
         hide_marks_action.setShortcut("Ctrl+P")
@@ -980,13 +995,6 @@ class MainWindow(QMainWindow):
         hide_marks_action.setChecked(self.hide_paragraph_marks)
         hide_marks_action.triggered.connect(self.toggle_paragraph_marks)
         view_menu.addAction(hide_marks_action)
-
-        view_menu.addSeparator()
-
-        color_settings_action = QAction("&Customize Colors...", self)
-        color_settings_action.setStatusTip("Customize document element colors")
-        color_settings_action.triggered.connect(self.show_color_settings)
-        view_menu.addAction(color_settings_action)
 
         # Help Menu
         help_menu = menubar.addMenu("&Help")
