@@ -4,8 +4,8 @@ Centralized version management for MDviewer.
 Provides semantic versioning and version-related utilities.
 """
 
-__version__ = "0.1.3"
-__version_date__ = "2026-02-03 0006"
+__version__ = "0.1.3a"
+__version_date__ = "2026-02-03 0758"
 __version_info__ = (0, 1, 3)
 
 

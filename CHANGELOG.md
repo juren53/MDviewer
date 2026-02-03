@@ -5,6 +5,21 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3a] - 2026-02-03 0758 CST
+
+### Changed
+- **Project housekeeping** — moved plan, session summary, lessons learned, and utility files into `notes/` directory for a cleaner project root
+- **AGENTS.md** — updated to address AI coding assistants generally instead of WARP specifically
+- **README.md** — added Refresh (F5) to View menu documentation, updated version
+
+### Fixed
+- **Filename typo** — renamed `PROMPT-geneeic` to `PROMPT-generic`
+
+### Other
+- Added `.claude/settings.local.json` to `.gitignore`
+
+---
+
 ## [0.1.3] - 2026-02-03 0006 CST
 
 ### Added
