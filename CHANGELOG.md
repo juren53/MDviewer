@@ -5,6 +5,16 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-02-03 0006 CST
+
+### Added
+- **Refresh menu item** — View → Refresh (F5) reloads the current document from disk, useful for dynamic or externally-edited markdown files
+
+### Changed
+- **View menu reordering** — moved "Hide Paragraph Marks" to the bottom of the View menu for better organization
+
+---
+
 ## [0.1.2a] - 2026-02-02 2030 CST
 
 ### Fixed
