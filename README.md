@@ -1,6 +1,6 @@
 # MDviewer
 
-**v0.1.2a 2026-02-02 2030**
+**v0.1.3 2026-02-03 0006 CST**
 
 A PyQt6-based Markdown viewer with GitHub-style rendering, multi-theme support,
 and cross-platform icon management.
@@ -72,6 +72,7 @@ python main.py yourfile.md
 
 ### View
 - **Zoom In/Out/Reset** (Ctrl++, Ctrl+-, Ctrl+0)
+- **Refresh** (F5): Reload current document from disk
 - **Theme**: Select from 9 themes organized by category
 - **Toggle Dark/Light** (Ctrl+T)
 - **Hide Paragraph Marks** (Ctrl+P)
