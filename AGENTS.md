@@ -173,6 +173,11 @@ Code highlighting uses Pygments. Extension configs are defined in `MarkdownRende
 - Uses `QTextCursor` for selection management
 - Search state preserved across document navigation
 
+### Refresh
+- Reload current document from disk via View → Refresh (F5)
+- Calls `_refresh_current_document()` which re-reads and re-renders the file
+- Useful for dynamic or externally-edited markdown files
+
 ### Paragraph Marks
 - Toggle visibility via View → Hide Paragraph Marks (Ctrl+P)
 - Pilcrow (¶) symbols on headers, period (.) marks on content
