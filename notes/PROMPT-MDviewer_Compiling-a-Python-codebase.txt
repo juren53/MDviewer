@@ -1,0 +1,5 @@
+“You are acting as a build agent. Compile the Python project using the existing PyInstaller .spec file located at  C:\Users\jimur\Projects\MDviewer\MDviewer.spec.
+Use PyInstaller in ‘spec mode’ (e.g., pyinstaller MDviewer.spec).
+Do not regenerate or modify the .spec file.
+Run the build in the project root, and report any build errors verbatim.
+After the build completes, list the output artifacts and their locations.”

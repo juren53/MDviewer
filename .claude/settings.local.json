@@ -5,6 +5,7 @@
       "Bash(git tag:*)",
       "Bash(git push:*)",
       "Bash(git commit:*)",
+      "Bash(powershell -Command:*)",
       "Bash(git -C /home/juren/Projects/MDviewer show f780f3c --stat)",
       "Bash(git -C /home/juren/Projects/MDviewer status)",
       "Bash(git -C /home/juren/Projects/MDviewer diff)",
