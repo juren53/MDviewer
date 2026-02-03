@@ -4,7 +4,21 @@
       "Bash(git add:*)",
       "Bash(git tag:*)",
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git -C /home/juren/Projects/MDviewer show f780f3c --stat)",
+      "Bash(git -C /home/juren/Projects/MDviewer status)",
+      "Bash(git -C /home/juren/Projects/MDviewer diff)",
+      "Bash(git -C /home/juren/Projects/MDviewer log --oneline -3)",
+      "Bash(git -C /home/juren/Projects/MDviewer add version.py)",
+      "Bash(git -C /home/juren/Projects/MDviewer commit -m \"$\\(cat <<''EOF''\nBump version to 0.1.2\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /home/juren/Projects/Icon_Manager_Module add SESSION_SUMMARY_2026-02-02.md)",
+      "Bash(git -C /home/juren/Projects/Icon_Manager_Module commit -m \"$\\(cat <<''EOF''\nAdd session summary for 2026-02-02: XDG icon theme procedure update\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /home/juren/Projects/Icon_Manager_Module push)",
+      "Bash(git -C /home/juren/Projects/MDviewer add SESSION_SUMMARY_2026-02-02.md)",
+      "Bash(git -C /home/juren/Projects/MDviewer commit -m \"$\\(cat <<''EOF''\nUpdate session summary with title bar icon investigation findings\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /home/juren/Projects/MDviewer push)",
+      "Bash(git -C /home/juren/Projects/Icon_Manager_Module commit -m \"$\\(cat <<''EOF''\nUpdate session summary with title bar icon investigation findings\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C /home/juren/Projects/MDviewer log --format=\"%h %ad %s\" --date=format-local:\"%Y-%m-%d %H%M %Z\" --all --reverse)"
     ]
   }
 }
