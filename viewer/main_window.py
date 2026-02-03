@@ -162,6 +162,10 @@ class QuickReferenceDialog(QDialog):
                     <td style="padding: 8px; color: {text_color};">Find text in document</td>
                 </tr>
                 <tr style="border-bottom: 1px solid {border_color};">
+                    <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">F5</kbd></td>
+                    <td style="padding: 8px; color: {text_color};">Refresh current document</td>
+                </tr>
+                <tr style="border-bottom: 1px solid {border_color};">
                     <td style="padding: 8px; font-weight: bold; color: {text_color};"><kbd style="background-color: {code_bg}; color: {text_color}; padding: 2px 6px; border-radius: 3px; font-family: monospace; border: 1px solid {border_color};">Ctrl+C</kbd></td>
                     <td style="padding: 8px; color: {text_color};">Copy selected text</td>
                 </tr>
