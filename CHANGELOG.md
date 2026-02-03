@@ -5,6 +5,16 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2a] - 2026-02-02 2030 CST
+
+### Fixed
+- **Update checker dialog hangs with QThread error** — the "Get Latest Version" feature would spin endlessly with `QObject::startTimer: Timers can only be used with threads started with QThread`
+  - Root cause: background work used Python's `threading.Thread` instead of Qt's `QThread`, preventing proper cross-thread signal delivery
+  - Replaced `UpdateCheckSignals(QObject)` + `threading.Thread` with `UpdateCheckWorker(QThread)` — a proper QThread worker that runs the version check and emits signals Qt can reliably deliver to the main thread
+  - Added `UpdatePerformWorker(QThread)` for the update execution phase, replacing `QTimer.singleShot()` calls from background threads (which is unsupported) with proper signal emissions
+
+---
+
 ## [0.1.2] - 2026-02-02 1509 CST
 
 ### Fixed

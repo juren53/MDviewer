@@ -20,7 +20,7 @@ from PyQt6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QSettings, QObject
+from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal, QSettings, QObject
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import (
     QAction,
@@ -651,13 +651,115 @@ class FindDialog(QDialog):
         super().closeEvent(event)
 
 
-class UpdateCheckSignals(QObject):
-    """Signals for communicating update check results from background thread"""
+class UpdateCheckWorker(QThread):
+    """Worker thread for checking updates using QThread for proper signal delivery"""
 
     no_version_info = pyqtSignal()
     up_to_date = pyqtSignal(str)  # current_version
     update_available = pyqtSignal(object)  # check_result
     check_error = pyqtSignal(str)  # error_message
+
+    def __init__(self, version_checker, git_updater, is_git_install, parent=None):
+        super().__init__(parent)
+        self.version_checker = version_checker
+        self.git_updater = git_updater
+        self.is_git_install = is_git_install
+
+    def run(self):
+        try:
+            print("[DEBUG] Starting update check...")
+            from github_version_checker import VersionCheckResult
+
+            check_result = self.version_checker.get_latest_version()
+            print(
+                f"[DEBUG] GitHub check result: error={check_result.error_message}, has_update={check_result.has_update}"
+            )
+
+            if check_result.error_message:
+                # Fall back to git-based checking if GitHub releases fail
+                print(f"GitHub releases check failed: {check_result.error_message}")
+                print("Falling back to git-based version checking...")
+
+                has_update, current_version, latest_version = (
+                    self.git_updater.get_update_info()
+                )
+                print(
+                    f"[DEBUG] Git check result: has_update={has_update}, current={current_version}, latest={latest_version}"
+                )
+
+                if not latest_version:
+                    print("[DEBUG] No version info - emitting signal")
+                    self.no_version_info.emit()
+                    return
+
+                if not has_update:
+                    print("[DEBUG] Up to date - emitting signal")
+                    current_version = (
+                        current_version or self.git_updater.get_current_version()
+                    )
+                    self.up_to_date.emit(current_version)
+                    return
+
+                print("[DEBUG] Update available - emitting signal")
+                # Create check result for dialog
+                check_result = VersionCheckResult()
+                check_result.has_update = True
+                check_result.current_version = current_version
+                check_result.latest_version = latest_version
+                check_result.release_notes = f"Update available via git repository:\n{current_version} → {latest_version}"
+                self.update_available.emit(check_result)
+
+            else:
+                print("[DEBUG] GitHub check succeeded")
+                # GitHub releases check succeeded
+                if not check_result.has_update:
+                    print("[DEBUG] Up to date - emitting signal")
+                    self.up_to_date.emit(check_result.current_version)
+                    return
+
+                print("[DEBUG] Update available via GitHub - emitting signal")
+                self.update_available.emit(check_result)
+
+        except Exception as e:
+            print(f"[DEBUG] Exception occurred: {e}")
+            import traceback
+
+            traceback.print_exc()
+            self.check_error.emit(str(e))
+
+
+class UpdatePerformWorker(QThread):
+    """Worker thread for performing updates using QThread for proper signal delivery"""
+
+    update_completed = pyqtSignal(object)  # update_result
+    update_error = pyqtSignal(str)  # error_message
+
+    def __init__(self, is_git_install, git_updater, release_downloader, update_version=None, parent=None):
+        super().__init__(parent)
+        self.is_git_install = is_git_install
+        self.git_updater = git_updater
+        self.release_downloader = release_downloader
+        self.update_version = update_version
+
+    def run(self):
+        try:
+            if self.is_git_install:
+                # Use git updater
+                update_result = self.git_updater.force_update()
+            else:
+                # Use release downloader
+                if self.update_version:
+                    update_result = self.release_downloader.perform_update(self.update_version)
+                else:
+                    from git_updater import GitUpdateResult
+                    update_result = GitUpdateResult()
+                    update_result.success = False
+                    update_result.message = "Unable to determine update version"
+
+            self.update_completed.emit(update_result)
+
+        except Exception as e:
+            self.update_error.emit(str(e))
 
 
 class MainWindow(QMainWindow):
@@ -1572,89 +1674,23 @@ class MainWindow(QMainWindow):
         else:
             progress_dialog.update_status("Checking for updates (GitHub releases)...")
 
-        # Create signals object for thread communication
-        signals = UpdateCheckSignals()
-        signals.no_version_info.connect(
+        # Create QThread worker for update check (proper Qt thread for signal delivery)
+        self._update_check_worker = UpdateCheckWorker(
+            self.version_checker, self.git_updater, self.is_git_install, parent=self
+        )
+        self._update_check_worker.no_version_info.connect(
             lambda: self._show_no_version_info_dialog(progress_dialog)
         )
-        signals.up_to_date.connect(
+        self._update_check_worker.up_to_date.connect(
             lambda v: self._show_up_to_date_dialog(progress_dialog, v)
         )
-        signals.update_available.connect(
+        self._update_check_worker.update_available.connect(
             lambda r: self._show_comparison_dialog(progress_dialog, r)
         )
-        signals.check_error.connect(
+        self._update_check_worker.check_error.connect(
             lambda e: self._show_check_error(progress_dialog, e)
         )
-
-        def check_for_updates():
-            try:
-                print("[DEBUG] Starting update check...")
-                # First try GitHub releases
-                from github_version_checker import VersionCheckResult
-
-                check_result = self.version_checker.get_latest_version()
-                print(
-                    f"[DEBUG] GitHub check result: error={check_result.error_message}, has_update={check_result.has_update}"
-                )
-
-                if check_result.error_message:
-                    # Fall back to git-based checking if GitHub releases fail
-                    print(f"GitHub releases check failed: {check_result.error_message}")
-                    print("Falling back to git-based version checking...")
-
-                    has_update, current_version, latest_version = (
-                        self.git_updater.get_update_info()
-                    )
-                    print(
-                        f"[DEBUG] Git check result: has_update={has_update}, current={current_version}, latest={latest_version}"
-                    )
-
-                    if not latest_version:
-                        print("[DEBUG] No version info - emitting signal")
-                        signals.no_version_info.emit()
-                        return
-
-                    if not has_update:
-                        print("[DEBUG] Up to date - emitting signal")
-                        current_version = (
-                            current_version or self.git_updater.get_current_version()
-                        )
-                        signals.up_to_date.emit(current_version)
-                        return
-
-                    print("[DEBUG] Update available - emitting signal")
-                    # Create check result for dialog
-                    check_result = VersionCheckResult()
-                    check_result.has_update = True
-                    check_result.current_version = current_version
-                    check_result.latest_version = latest_version
-                    check_result.release_notes = f"Update available via git repository:\n{current_version} → {latest_version}"
-                    signals.update_available.emit(check_result)
-
-                else:
-                    print("[DEBUG] GitHub check succeeded")
-                    # GitHub releases check succeeded
-                    if not check_result.has_update:
-                        print("[DEBUG] Up to date - emitting signal")
-                        signals.up_to_date.emit(check_result.current_version)
-                        return
-
-                    print("[DEBUG] Update available via GitHub - emitting signal")
-                    signals.update_available.emit(check_result)
-
-            except Exception as e:
-                print(f"[DEBUG] Exception occurred: {e}")
-                import traceback
-
-                traceback.print_exc()
-                signals.check_error.emit(str(e))
-
-        # Run update check in background thread to keep UI responsive
-        import threading
-
-        thread = threading.Thread(target=check_for_updates, daemon=True)
-        thread.start()
+        self._update_check_worker.start()
 
     def _check_timeout(self, progress_dialog):
         """Handle timeout if check takes too long"""
@@ -1750,47 +1786,28 @@ class MainWindow(QMainWindow):
     def _perform_update(self):
         """Perform the actual update process"""
         progress_dialog = UpdateProgressDialog(self)
-        
+
         # Update message based on installation type
         if self.is_git_install:
             progress_dialog.update_status("Updating via git...")
         else:
             progress_dialog.update_status("Downloading update...")
-        
+
         progress_dialog.show()
 
-        def update_in_background():
-            try:
-                if self.is_git_install:
-                    # Use git updater
-                    update_result = self.git_updater.force_update()
-                else:
-                    # Use release downloader - get version from stored check result
-                    if hasattr(self, '_update_version'):
-                        update_result = self.release_downloader.perform_update(self._update_version)
-                    else:
-                        # Fallback error
-                        from git_updater import GitUpdateResult
-                        update_result = GitUpdateResult()
-                        update_result.success = False
-                        update_result.message = "Unable to determine update version"
-
-                # Update UI on main thread
-                QTimer.singleShot(
-                    100,
-                    lambda: self._show_update_result(update_result, progress_dialog),
-                )
-
-            except Exception as e:
-                QTimer.singleShot(
-                    100, lambda: self._show_update_error(str(e), progress_dialog)
-                )
-
-        # Run update in background thread
-        import threading
-
-        thread = threading.Thread(target=update_in_background, daemon=True)
-        thread.start()
+        # Create QThread worker for update (proper Qt thread for signal delivery)
+        update_version = getattr(self, '_update_version', None)
+        self._update_perform_worker = UpdatePerformWorker(
+            self.is_git_install, self.git_updater, self.release_downloader,
+            update_version=update_version, parent=self
+        )
+        self._update_perform_worker.update_completed.connect(
+            lambda r: self._show_update_result(r, progress_dialog)
+        )
+        self._update_perform_worker.update_error.connect(
+            lambda e: self._show_update_error(e, progress_dialog)
+        )
+        self._update_perform_worker.start()
 
     def _show_update_result(self, update_result, progress_dialog):
         """Show update result dialog"""
