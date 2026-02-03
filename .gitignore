@@ -182,3 +182,6 @@ tests/test_output.html
 build/
 dist/
 *.spec
+
+# Claude Code
+.claude/settings.local.json
