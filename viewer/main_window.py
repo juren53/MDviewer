@@ -50,44 +50,9 @@ from github_version_checker import GitHubVersionChecker
 from git_updater import GitUpdater
 from release_downloader import ReleaseDownloader
 from version import get_semver
-
-
-class AboutDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("About MDviewer")
-        self.setModal(True)
-        self.setFixedSize(400, 300)
-        if parent:
-            self.setWindowIcon(parent.windowIcon())
-
-        layout = QVBoxLayout()
-
-        title_label = QLabel("MDviewer")
-        title_label.setFont(QFont("Arial", 16, QFont.Weight.Bold))
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        from version import get_version_string
-
-        version_label = QLabel(get_version_string())
-        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        desc_label = QLabel(
-            "A PyQt6 Markdown viewer with GitHub-style rendering and multi-theme support"
-        )
-        desc_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        desc_label.setWordWrap(True)
-
-        close_button = QPushButton("Close")
-        close_button.clicked.connect(self.accept)
-
-        layout.addWidget(title_label)
-        layout.addWidget(version_label)
-        layout.addWidget(desc_label)
-        layout.addStretch()
-        layout.addWidget(close_button)
-
-        self.setLayout(layout)
+from version import __version__, __version_date__
+from pyqt_app_info import AppIdentity, gather_info
+from pyqt_app_info.qt import AboutDialog
 
 
 class QuickReferenceDialog(QDialog):
@@ -1860,5 +1825,17 @@ class MainWindow(QMainWindow):
         error_dialog.exec()
 
     def show_about(self):
-        dialog = AboutDialog(self)
-        dialog.exec()
+        identity = AppIdentity(
+            name="MDviewer",
+            version=__version__,
+            commit_date=f"{__version_date__} CST",
+            description="A PyQt6 Markdown viewer with GitHub-style rendering and multi-theme support.",
+            features=[
+                "GitHub-style Markdown rendering",
+                "Multi-theme support with custom colors",
+                "Live file watching and auto-reload",
+                "Find and replace",
+            ],
+        )
+        info = gather_info(identity, caller_file=__file__)
+        AboutDialog(info, parent=self).exec()
