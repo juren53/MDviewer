@@ -142,24 +142,28 @@ EOF
     # Setup icons
     echo -e "${YELLOW}Setting up icons...${NC}"
     
-    # Copy icons if they exist (from parent directory)
-    if [ -f "../../resources/icons/app_256x256.png" ]; then
-        cp "../../resources/icons/app_256x256.png" "${APPDIR_NAME}/.DirIcon"
-        cp "../../resources/icons/app_256x256.png" "${APPDIR_NAME}/usr/share/icons/hicolor/256x256/apps/${APP_NAME,,}.png"
+    # Copy icons if they exist (from appimage_build/, icons are at ../resources/icons/)
+    local ICON_DIR="../resources/icons"
+
+    if [ -f "${ICON_DIR}/app_256x256.png" ]; then
+        cp "${ICON_DIR}/app_256x256.png" "${APPDIR_NAME}/${APP_NAME,,}.png"
+        ln -sf "${APP_NAME,,}.png" "${APPDIR_NAME}/.DirIcon"
+        cp "${ICON_DIR}/app_256x256.png" "${APPDIR_NAME}/usr/share/icons/hicolor/256x256/apps/${APP_NAME,,}.png"
     fi
-    
-    if [ -f "../../resources/icons/app_128x128.png" ]; then
-        cp "../../resources/icons/app_128x128.png" "${APPDIR_NAME}/usr/share/icons/hicolor/128x128/apps/${APP_NAME,,}.png"
+
+    if [ -f "${ICON_DIR}/app_128x128.png" ]; then
+        cp "${ICON_DIR}/app_128x128.png" "${APPDIR_NAME}/usr/share/icons/hicolor/128x128/apps/${APP_NAME,,}.png"
     fi
-    
-    if [ -f "../../resources/icons/app_64x64.png" ]; then
-        cp "../../resources/icons/app_64x64.png" "${APPDIR_NAME}/usr/share/icons/hicolor/64x64/apps/${APP_NAME,,}.png"
+
+    if [ -f "${ICON_DIR}/app_64x64.png" ]; then
+        cp "${ICON_DIR}/app_64x64.png" "${APPDIR_NAME}/usr/share/icons/hicolor/64x64/apps/${APP_NAME,,}.png"
     fi
-    
+
     # Fallback to app.png if specific sizes don't exist
-    if [ ! -f "${APPDIR_NAME}/.DirIcon" ] && [ -f "../../resources/icons/app.png" ]; then
-        cp "../../resources/icons/app.png" "${APPDIR_NAME}/.DirIcon"
-        cp "../../resources/icons/app.png" "${APPDIR_NAME}/usr/share/icons/hicolor/256x256/apps/${APP_NAME,,}.png"
+    if [ ! -f "${APPDIR_NAME}/${APP_NAME,,}.png" ] && [ -f "${ICON_DIR}/app.png" ]; then
+        cp "${ICON_DIR}/app.png" "${APPDIR_NAME}/${APP_NAME,,}.png"
+        ln -sf "${APP_NAME,,}.png" "${APPDIR_NAME}/.DirIcon"
+        cp "${ICON_DIR}/app.png" "${APPDIR_NAME}/usr/share/icons/hicolor/256x256/apps/${APP_NAME,,}.png"
     fi
     
     echo -e "${GREEN}AppDir structure created!${NC}"
