@@ -47,11 +47,40 @@ python test_update_dialog.py
 # Windows: Build executable (use Windows shell)
 .\build.bat
 
+# Linux: Build AppImage (portable Linux executable)
+./build_appimage.sh
+
 # Both scripts clean build/dist directories and run:
 pyinstaller --clean MDviewer.spec
 ```
 
 Note: The PyInstaller spec file (`MDviewer.spec`) is dynamically generated - not tracked in version control. Create it via `pyinstaller --onefile main.py` then customize as needed.
+
+#### AppImage Build Details
+The AppImage build process creates a portable Linux executable:
+- **Script**: `build_appimage.sh` - Complete build automation
+- **Spec**: `MDviewer_linux.spec` - Linux-specific PyInstaller configuration
+- **Output**: `appimage_build/MDviewer.AppDir/` (without appimagetool) or `MDviewer-x86_64.AppImage` (with appimagetool)
+
+**Prerequisites for AppImage:**
+```bash
+# Install required tools
+sudo apt install python3 python3-pip python3-venv
+
+# Download appimagetool for final AppImage creation
+wget https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+chmod +x appimagetool-x86_64.AppImage
+```
+
+**Build Process:**
+1. Creates isolated Python environment
+2. Installs dependencies from requirements.txt
+3. Builds with PyInstaller using Linux spec
+4. Creates AppDir structure with desktop integration
+5. Sets up Qt libraries and plugins
+6. Generates final AppImage (if appimagetool available)
+
+The AppImage bundles all dependencies including PyQt6, ensuring compatibility across Linux distributions without requiring system-wide package installations.
 
 ### Installation
 ```powershell

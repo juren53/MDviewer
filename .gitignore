@@ -185,3 +185,9 @@ dist/
 
 # Claude Code
 .claude/settings.local.json
+
+# AppImage build artifacts
+appimagetool
+appimagetool-x86_64.AppImage
+appimage_build/
+*.AppImage

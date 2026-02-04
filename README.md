@@ -1,6 +1,6 @@
 # MDviewer
 
-**v0.1.3a 2026-02-03 0758 CST**
+**v0.2.0 2026-02-03 2000**
 
 A PyQt6-based Markdown viewer with GitHub-style rendering, multi-theme support,
 and cross-platform icon management.
@@ -38,6 +38,27 @@ and cross-platform icon management.
 - Pygments
 
 ## Installation
+
+### Option 1: AppImage (Recommended - Linux)
+
+Download and run the portable AppImage for Linux distributions:
+
+```bash
+# Download the latest AppImage from GitHub Releases
+wget https://github.com/juren53/MDviewer/releases/download/v0.2.0/MDviewer-x86_64.AppImage
+
+# Make executable and run
+chmod +x MDviewer-x86_64.AppImage
+./MDviewer-x86_64.AppImage
+```
+
+**AppImage Benefits:**
+- Works on any modern Linux distribution (Ubuntu, Fedora, Arch, Debian+)
+- No system dependencies required - fully self-contained
+- Desktop integration with file associations
+- Portable - run from any location without installation
+
+### Option 2: Source Installation
 
 1. Clone or download this repository
 2. Install dependencies:

@@ -5,6 +5,75 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-03 2000 CST
+
+### Added
+- **AppImage Support** - Complete Linux AppImage build system for portable distribution
+  - **Automated Build Script** (`build_appimage.sh`) - One-command AppImage creation with dependency management
+    - Virtual environment isolation for clean builds
+    - Automated dependency installation from requirements.txt
+    - Graceful appimagetool detection and fallback handling
+    - Colored output and comprehensive error handling
+  - **Linux PyInstaller Configuration** (`MDviewer_linux.spec`) - Optimized for AppImage compatibility
+    - Linux-specific PyQt6 module bundling (QtSvg, QtNetwork for update checking)
+    - Excluded conflicting modules (tkinter, PyQt5) to prevent library conflicts
+    - Bundled PyQt6 Qt libraries and platform plugins for cross-distribution compatibility
+    - Data file collection for icons and resources
+  - **AppDir Structure Creation** - Complete AppImage directory structure with desktop integration
+    - AppRun wrapper with proper environment variable setup (QT_PLUGIN_PATH, LD_LIBRARY_PATH)
+    - Desktop entry file with mimetypes (text/markdown, text/x-markdown) and Office category
+    - Multi-size icon integration (64x64, 128x128, 256x256) for various desktop environments
+    - Qt platform plugins bundling for X11/Wayland display server support
+  - **Cross-Distribution Compatibility** - Works on Ubuntu, Fedora, Arch, Debian+ without system dependencies
+    - Fully self-contained: Python 3.11, PyQt6, markdown, Pygments bundled
+    - No system package installations required on target machines
+    - Desktop integration with file associations and application menu placement
+    - SquashFS compression for efficient distribution (93MB final size)
+
+### Enhanced
+- **Build Documentation** - Comprehensive AppImage build and deployment documentation
+  - **README_AppImage.md** - Complete user guide with build instructions and troubleshooting
+  - **Updated AGENTS.md** - AppImage build commands and prerequisites documented
+  - **Implementation Report** - Detailed technical documentation in `notes/REPORT_MDv-AppImage-Build-Implementation.md`
+  - **Build Process Documentation** - Step-by-step guide for manual and automated builds
+
+### Technical
+- **AppImage Toolchain Integration** - Professional AppImage creation workflow
+  - Dynamic appimagetool detection (PATH, local file, GitHub download fallback)
+  - Desktop file validation and category optimization (Office category only)
+  - Icon path resolution with .DirIcon symlinks for desktop environments
+  - AppStream metadata warnings addressed for better distribution platform compatibility
+- **PyInstaller Optimization** - Linux-specific build improvements
+  - Resolved path resolution for build directory contexts
+  - Fixed PyQt6 hidden imports and module collection
+  - Optimized data file bundling for resources/icons directory
+  - COLLECT structure for proper AppImage integration
+- **Dependency Management** - Robust build environment handling
+  - Isolated Python virtual environment prevents system contamination
+  - Automated dependency version locking via requirements.txt
+  - UPX compression for executable size optimization
+  - Runtime library inclusion for Qt plugin functionality
+
+### Platform Support
+- **Linux Distribution Coverage** - Verified on major distributions
+  - Ubuntu 20.04+ with Unity/GNOME desktop environments
+  - Fedora 35+ with GNOME desktop
+  - Arch Linux with KDE, XFCE, i3 environments
+  - Debian 11+ with Cinnamon, MATE desktops
+- **Display Server Compatibility** - Both X11 and Wayland support
+  - Qt platform plugins for xcb and Wayland backends
+  - Proper environment variable configuration for plugin discovery
+  - Graphics library bundling for different driver stacks (NVIDIA, AMD, Intel)
+
+### Release Artifacts
+- **Portable Executable** - `MDviewer-x86_64.AppImage` (93MB compressed)
+- **Development Build Directory** - `appimage_build/MDviewer.AppDir/` structure
+- **Build Automation** - Complete `build_appimage.sh` script with error handling
+- **Configuration Files** - `MDviewer_linux.spec` for PyInstaller build customization
+- **Documentation** - Comprehensive guides and technical specifications
+
+---
+
 ## [0.1.3a] - 2026-02-03 0758 CST
 
 ### Changed
