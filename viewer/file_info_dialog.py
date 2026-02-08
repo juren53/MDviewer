@@ -44,6 +44,117 @@ def _format_timestamp(ts):
     return dt.strftime("%Y-%m-%d  %I:%M:%S %p")
 
 
+# File extension to human-readable description
+_FILE_TYPE_DESCRIPTIONS = {
+    '.md':        'Markdown document',
+    '.markdown':  'Markdown document',
+    '.mkd':       'Markdown document',
+    '.txt':       'Plain text file',
+    '.text':      'Plain text file',
+    '.log':       'Log file',
+    '.csv':       'Comma-separated values file',
+    '.tsv':       'Tab-separated values file',
+    '.json':      'JSON data file',
+    '.xml':       'XML document',
+    '.yaml':      'YAML configuration file',
+    '.yml':       'YAML configuration file',
+    '.toml':      'TOML configuration file',
+    '.ini':       'INI configuration file',
+    '.cfg':       'Configuration file',
+    '.conf':      'Configuration file',
+    '.html':      'HTML document',
+    '.htm':       'HTML document',
+    '.css':       'CSS stylesheet',
+    '.js':        'JavaScript source file',
+    '.ts':        'TypeScript source file',
+    '.py':        'Python source file',
+    '.pyw':       'Python windowed script',
+    '.rb':        'Ruby source file',
+    '.java':      'Java source file',
+    '.c':         'C source file',
+    '.h':         'C/C++ header file',
+    '.cpp':       'C++ source file',
+    '.hpp':       'C++ header file',
+    '.cs':        'C# source file',
+    '.go':        'Go source file',
+    '.rs':        'Rust source file',
+    '.sh':        'Shell script',
+    '.bash':      'Bash shell script',
+    '.zsh':       'Zsh shell script',
+    '.bat':       'Windows batch file',
+    '.cmd':       'Windows command script',
+    '.ps1':       'PowerShell script',
+    '.sql':       'SQL database script',
+    '.r':         'R statistical script',
+    '.tex':       'LaTeX document',
+    '.bib':       'BibTeX bibliography file',
+    '.rst':       'reStructuredText document',
+    '.adoc':      'AsciiDoc document',
+    '.org':       'Org-mode document',
+    '.pdf':       'PDF document',
+    '.doc':       'Microsoft Word document',
+    '.docx':      'Microsoft Word document',
+    '.xls':       'Microsoft Excel spreadsheet',
+    '.xlsx':      'Microsoft Excel spreadsheet',
+    '.ppt':       'Microsoft PowerPoint presentation',
+    '.pptx':      'Microsoft PowerPoint presentation',
+    '.odt':       'OpenDocument text file',
+    '.ods':       'OpenDocument spreadsheet',
+    '.odp':       'OpenDocument presentation',
+    '.rtf':       'Rich Text Format file',
+    '.png':       'PNG image',
+    '.jpg':       'JPEG image',
+    '.jpeg':      'JPEG image',
+    '.gif':       'GIF image',
+    '.svg':       'SVG vector image',
+    '.bmp':       'Bitmap image',
+    '.webp':      'WebP image',
+    '.ico':       'Icon file',
+    '.icns':      'macOS icon file',
+    '.mp3':       'MP3 audio file',
+    '.wav':       'WAV audio file',
+    '.mp4':       'MP4 video file',
+    '.avi':       'AVI video file',
+    '.mkv':       'Matroska video file',
+    '.zip':       'ZIP archive',
+    '.tar':       'TAR archive',
+    '.gz':        'Gzip compressed file',
+    '.bz2':       'Bzip2 compressed file',
+    '.xz':        'XZ compressed file',
+    '.7z':        '7-Zip archive',
+    '.rar':       'RAR archive',
+    '.deb':       'Debian package',
+    '.rpm':       'RPM package',
+    '.exe':       'Windows executable',
+    '.dll':       'Windows dynamic library',
+    '.so':        'Shared object library',
+    '.AppImage':  'Linux AppImage application',
+    '.desktop':   'Linux desktop entry file',
+    '.spec':      'PyInstaller spec file',
+    '.env':       'Environment variables file',
+    '.gitignore': 'Git ignore rules',
+    '.dockerignore': 'Docker ignore rules',
+    '.lock':      'Lock file',
+    '.pid':       'Process ID file',
+}
+
+
+def _describe_file_type(ext):
+    """Return a human-readable file type description"""
+    if not ext:
+        return "File (no extension)"
+
+    # Try exact match first, then case-insensitive
+    desc = _FILE_TYPE_DESCRIPTIONS.get(ext)
+    if not desc:
+        desc = _FILE_TYPE_DESCRIPTIONS.get(ext.lower())
+    if desc:
+        return f"{ext.lstrip('.').upper()} — {desc}"
+
+    # Fallback: just the extension
+    return f"{ext.lstrip('.').upper()} file"
+
+
 class FileInfoDialog(QDialog):
     """Dialog showing detailed file information"""
 
@@ -77,8 +188,8 @@ class FileInfoDialog(QDialog):
 
         # File type / extension
         _, ext = os.path.splitext(file_path)
-        file_type = ext.lstrip('.').upper() if ext else "No extension"
-        identity_form.addRow("Type:", QLabel(f"{file_type} file"))
+        file_type = _describe_file_type(ext)
+        identity_form.addRow("Type:", QLabel(file_type))
 
         identity_group.setLayout(identity_form)
         layout.addWidget(identity_group)
