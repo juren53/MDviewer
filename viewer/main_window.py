@@ -34,6 +34,7 @@ from PyQt6.QtGui import (
 )
 from .markdown_renderer import MarkdownRenderer
 from .color_settings_dialog import ColorSettingsDialog
+from .file_info_dialog import FileInfoDialog
 from .theme_manager import get_theme_registry
 from .update_dialogs import (
     VersionCompareDialog,
@@ -835,6 +836,14 @@ class MainWindow(QMainWindow):
 
         file_menu.addSeparator()
 
+        info_action = QAction("&Info", self)
+        info_action.setShortcut("Ctrl+I")
+        info_action.setStatusTip("Show file information for current document")
+        info_action.triggered.connect(self.show_file_info)
+        file_menu.addAction(info_action)
+
+        file_menu.addSeparator()
+
         exit_action = QAction("E&xit", self)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.setStatusTip("Exit the application")
@@ -1104,6 +1113,25 @@ class MainWindow(QMainWindow):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
                 self.status_bar.showMessage("Error opening file")
+
+    def show_file_info(self):
+        """Show file information dialog for the current document"""
+        if not self.current_file:
+            QMessageBox.information(
+                self, "No File",
+                "No file is currently open.\n\nOpen a file first with File → Open."
+            )
+            return
+
+        if not os.path.exists(self.current_file):
+            QMessageBox.warning(
+                self, "File Not Found",
+                f"The file no longer exists:\n{self.current_file}"
+            )
+            return
+
+        dialog = FileInfoDialog(self.current_file, self)
+        dialog.exec()
 
     def zoom_in(self):
         current_font = self.text_browser.font()
