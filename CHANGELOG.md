@@ -5,6 +5,18 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-02-08 1047 CST
+
+### Added
+- **Edit → Open in Editor** (Ctrl+E) — Opens the current document in an external text editor
+  - First use presents a picker dialog listing all installed editors detected on the system
+  - User's choice is remembered in QSettings for subsequent use
+  - Supports 30+ GUI editors (Xed, gedit, Kate, VS Code, Sublime, etc.) and terminal editors (nano, Vim, Neovim, micro)
+  - Terminal editors are automatically wrapped in the system's terminal emulator
+  - Cross-platform: Linux and Windows editors included
+- **Edit → Change Preferred Editor** — Allows changing the saved editor choice at any time
+- New module: `viewer/external_editor.py` — Editor detection, picker dialog, and launcher
+
 ## [0.2.2] - 2026-02-08 1041 CST
 
 ### Added

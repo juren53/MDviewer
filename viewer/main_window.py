@@ -35,6 +35,7 @@ from PyQt6.QtGui import (
 from .markdown_renderer import MarkdownRenderer
 from .color_settings_dialog import ColorSettingsDialog
 from .file_info_dialog import FileInfoDialog
+from .external_editor import open_in_external_editor, change_preferred_editor
 from .theme_manager import get_theme_registry
 from .update_dialogs import (
     VersionCompareDialog,
@@ -873,6 +874,19 @@ class MainWindow(QMainWindow):
         select_all_action.triggered.connect(self.text_browser.selectAll)
         edit_menu.addAction(select_all_action)
 
+        edit_menu.addSeparator()
+
+        edit_external_action = QAction("Open in &Editor", self)
+        edit_external_action.setShortcut("Ctrl+E")
+        edit_external_action.setStatusTip("Open current document in external text editor")
+        edit_external_action.triggered.connect(self.open_in_editor)
+        edit_menu.addAction(edit_external_action)
+
+        change_editor_action = QAction("Change &Preferred Editor...", self)
+        change_editor_action.setStatusTip("Select a different text editor")
+        change_editor_action.triggered.connect(self.change_editor)
+        edit_menu.addAction(change_editor_action)
+
         # View Menu
         view_menu = menubar.addMenu("&View")
 
@@ -1132,6 +1146,31 @@ class MainWindow(QMainWindow):
 
         dialog = FileInfoDialog(self.current_file, self)
         dialog.exec()
+
+    def open_in_editor(self):
+        """Open current document in an external text editor"""
+        if not self.current_file:
+            QMessageBox.information(
+                self, "No File",
+                "No file is currently open.\n\nOpen a file first with File → Open."
+            )
+            return
+
+        if not os.path.exists(self.current_file):
+            QMessageBox.warning(
+                self, "File Not Found",
+                f"The file no longer exists:\n{self.current_file}"
+            )
+            return
+
+        if open_in_external_editor(self.current_file, self, self.settings):
+            self.status_bar.showMessage(f"Opened in editor: {os.path.basename(self.current_file)}")
+
+    def change_editor(self):
+        """Let user select a different preferred editor"""
+        editor = change_preferred_editor(self, self.settings)
+        if editor:
+            self.status_bar.showMessage(f"Preferred editor set to: {editor}")
 
     def zoom_in(self):
         current_font = self.text_browser.font()
