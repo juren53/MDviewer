@@ -5,6 +5,21 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-02-08 1041 CST
+
+### Added
+- **File → Info dialog** (Ctrl+I) — Shows detailed metadata for the current document:
+  - File name, directory, full path, and file type
+  - File size with line, word, and character counts
+  - Modified, accessed, and created/changed timestamps
+  - Permissions (rwx + octal), owner, and group
+  - Symlink target detection
+- **Human-readable file type descriptions** — 95+ extensions mapped to plain-language labels (e.g. "MD — Markdown document", "TXT — Plain text file", "LOG — Log file")
+- All path fields in the dialog are selectable and copyable
+
+### Fixed
+- **Application icon restored** in system menu and system tray — installed multi-resolution PNGs into `~/.local/share/icons/hicolor/` to match the `Icon=mdviewer` reference in the `.desktop` file
+
 ## [0.2.1] - 2026-02-03 2145 CST
 
 ### Changed
