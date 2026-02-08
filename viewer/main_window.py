@@ -35,7 +35,8 @@ from PyQt6.QtGui import (
 from .markdown_renderer import MarkdownRenderer
 from .color_settings_dialog import ColorSettingsDialog
 from .file_info_dialog import FileInfoDialog
-from .external_editor import open_in_external_editor, change_preferred_editor
+from .external_editor import (open_in_external_editor, change_preferred_editor,
+                               _launch_editor as launch_editor)
 from .theme_manager import get_theme_registry
 from .update_dialogs import (
     VersionCompareDialog,
@@ -1168,8 +1169,16 @@ class MainWindow(QMainWindow):
 
     def change_editor(self):
         """Let user select a different preferred editor"""
+        # Clear saved preference so the picker always appears
+        self.settings.remove("external_editor")
         editor = change_preferred_editor(self, self.settings)
         if editor:
+            self.status_bar.showMessage(f"Preferred editor set to: {editor}")
+            # If a file is open, open it in the new editor
+            if self.current_file and os.path.exists(self.current_file):
+                success, error = launch_editor(editor, self.current_file)
+                if success:
+                    self.status_bar.showMessage(f"Opened in {editor}: {os.path.basename(self.current_file)}")
             self.status_bar.showMessage(f"Preferred editor set to: {editor}")
 
     def zoom_in(self):
