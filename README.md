@@ -68,13 +68,23 @@ chmod +x MDviewer-x86_64.AppImage
 
 ## Usage
 
-Run the application:
+**Linux / macOS / Git Bash:**
 ```bash
-python main.py
+./run.sh
+./run.sh yourfile.md
 ```
 
-Or open a file directly:
+**Windows (PowerShell):**
+```powershell
+.\run.ps1
+.\run.ps1 yourfile.md
+```
+
+Both launchers auto-create a venv, install dependencies, and launch the app. If PowerShell blocks `run.ps1`, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once first.
+
+**Manual:**
 ```bash
+python main.py
 python main.py yourfile.md
 ```
 
