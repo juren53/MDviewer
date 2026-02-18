@@ -1,33 +1,26 @@
 # MDviewer
 
-**v0.2.0 2026-02-03 2000**
+**Version:** v0.2.0 (2026-02-03)
 
-A PyQt6-based Markdown viewer with GitHub-style rendering, multi-theme support,
-and cross-platform icon management.
+A PyQt6-based Markdown viewer with GitHub-style rendering, 9 themes, and cross-platform icon support.
 
 ## Features
 
-- **GitHub-style markdown rendering** with authentic CSS styling
+- **GitHub-style rendering** with authentic CSS styling
 - **Syntax highlighting** for code blocks using Pygments
-- **Multi-theme system**: 9 themes across Built-in and Popular categories
+- **9 themes** across Built-in and Popular categories
   - Built-in: Dark, Light
   - Popular: Solarized Dark, Solarized Light, Dracula, GitHub, Monokai, Nord, One Dark
-  - Ctrl+T toggle between dark and light
-  - Live theme switching without application restart
-- **Theme customization**: Per-theme color overrides with live preview
-  - 7 customizable elements: headings, body text, background, links, blockquotes, code blocks, borders
-  - Factory reset for individual themes or all themes at once
-- **Cross-platform icon support** via [Icon_Manager_Module](https://github.com/juren53/Icon_Manager_Module)
-  - Platform-aware icon selection (`.ico`, `.icns`, `.png`)
-  - Windows taskbar icon fix (no more generic Python icon)
-  - Linux XDG hicolor theme integration for reliable icons in app launcher, taskbar, and window switcher
-- **Find in document** (Ctrl+F) with match highlighting and navigation
-- **Recent files** and **recent directories** with persistent storage
-- **Hide paragraph marks** toggle (Ctrl+P)
+  - Live theme switching without restart; `Ctrl+T` toggles dark/light
+- **Theme customization**: Per-theme color overrides with live preview for 7 elements (headings, body, background, links, blockquotes, code blocks, borders); factory reset per-theme or all at once
+- **Find in document** (`Ctrl+F`) with match highlighting and navigation
+- **Recent files and directories** with persistent storage
 - **Session restore**: Opens last viewed file on startup
+- **Zoom controls**: `Ctrl++`, `Ctrl+-`, `Ctrl+0`
+- **Hide paragraph marks** toggle (`Ctrl+P`)
+- **Update checker**: Check for and install latest version from GitHub (`Ctrl+U`)
 - **Command-line support**: Load files directly from terminal
-- **Zoom controls** (Ctrl++, Ctrl+-, Ctrl+0)
-- **Update checker**: Check for and install latest version from GitHub
+- **Cross-platform icons**: Platform-aware icon loading (Windows `.ico`, macOS `.icns`, Linux `.png`)
 - **Optimized for small files** (<1MB) with fast loading
 
 ## Requirements
@@ -39,93 +32,72 @@ and cross-platform icon management.
 
 ## Installation
 
-### Option 1: AppImage (Recommended - Linux)
+### Quick Start
 
-Download and run the portable AppImage for Linux distributions:
-
+**Linux / macOS / AppImage (no Python needed):**
 ```bash
-# Download the latest AppImage from GitHub Releases
+# AppImage — portable, no dependencies required
 wget https://github.com/juren53/MDviewer/releases/download/v0.2.0/MDviewer-x86_64.AppImage
-
-# Make executable and run
 chmod +x MDviewer-x86_64.AppImage
 ./MDviewer-x86_64.AppImage
-```
 
-**AppImage Benefits:**
-- Works on any modern Linux distribution (Ubuntu, Fedora, Arch, Debian+)
-- No system dependencies required - fully self-contained
-- Desktop integration with file associations
-- Portable - run from any location without installation
-
-### Option 2: Source Installation
-
-1. Clone or download this repository
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## Usage
-
-**Linux / macOS / Git Bash:**
-```bash
+# Or from source with auto-setup
+git clone https://github.com/juren53/MDviewer.git
+cd MDviewer
 ./run.sh
-./run.sh yourfile.md
 ```
 
 **Windows (PowerShell):**
 ```powershell
+git clone https://github.com/juren53/MDviewer.git
+cd MDviewer
 .\run.ps1
-.\run.ps1 yourfile.md
 ```
 
-Both launchers auto-create a venv, install dependencies, and launch the app. If PowerShell blocks `run.ps1`, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once first.
+Both `run.sh` and `run.ps1` auto-create a virtual environment, install dependencies, and launch the app. If PowerShell blocks `run.ps1`, run `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` once first.
 
-**Manual:**
+### Manual Setup
 ```bash
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
 python main.py
+```
+
+## Usage
+
+```bash
+# Open the app
+./run.sh                   # Linux/macOS
+.\run.ps1                  # Windows PowerShell
+
+# Open a file directly
+./run.sh yourfile.md
+.\run.ps1 yourfile.md
 python main.py yourfile.md
 ```
 
-## Menu Structure
+## Keyboard Shortcuts
 
-### File
-- **Open** (Ctrl+O): Open a markdown file
-- **Open Recent Files**: Recent files list (max 10)
-- **Open Recent Directories**: Quick access to previously used directories
-- **Exit** (Ctrl+Q): Close the application
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+O` | Open file |
+| `Ctrl+F` | Find in document |
+| `Ctrl+T` | Toggle dark/light theme |
+| `Ctrl+P` | Hide/show paragraph marks |
+| `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Zoom in / out / reset |
+| `Ctrl+U` | Check for updates |
+| `F5` | Refresh current document |
+| `Ctrl+C` | Copy selected text |
+| `Ctrl+A` | Select all |
+| `Ctrl+Q` | Quit |
 
-### Edit
-- **Find...** (Ctrl+F): Search text in document
-- **Copy** (Ctrl+C): Copy selected text
-- **Select All** (Ctrl+A): Select all text
+## Supported Markdown
 
-### View
-- **Zoom In/Out/Reset** (Ctrl++, Ctrl+-, Ctrl+0)
-- **Refresh** (F5): Reload current document from disk
-- **Theme**: Select from 9 themes organized by category
-- **Toggle Dark/Light** (Ctrl+T)
-- **Hide Paragraph Marks** (Ctrl+P)
-- **Customize Colors...**: Per-theme color customization dialog
-
-### Help
-- **Quick Reference**: Keyboard shortcuts and markdown syntax
-- **Changelog**: View version history
-- **Get Latest Version** (Ctrl+U): Check for and install updates
-- **About**: Application information
-
-## Supported Markdown Features
-
-- Headers (H1-H6)
-- Bold and italic text
-- Inline code and code blocks with syntax highlighting
-- Tables
-- Blockquotes
-- Lists (ordered and unordered)
-- Links
-- Horizontal rules
-- Line breaks
+- Headers (H1–H6), bold, italic
+- Inline code and fenced code blocks with syntax highlighting
+- Tables, blockquotes, lists (ordered and unordered)
+- Links, horizontal rules, line breaks
 
 ## Project Structure
 
@@ -133,15 +105,16 @@ python main.py yourfile.md
 MDviewer/
 ├── main.py                      # Application entry point
 ├── version.py                   # Centralized version management
-├── icon_loader.py               # Cross-platform icon loader (from Icon_Manager_Module)
+├── icon_loader.py               # Cross-platform icon loader
 ├── requirements.txt             # Python dependencies
+├── run.sh                       # Linux/macOS/Git Bash launcher
+├── run.ps1                      # Windows PowerShell launcher
 ├── MDviewer.spec                # PyInstaller build configuration
 ├── MDviewer.desktop             # Linux desktop integration
 ├── git_updater.py               # Git-based update system
 ├── github_version_checker.py    # GitHub release version checker
 ├── release_downloader.py        # GitHub release download/install
 ├── viewer/
-│   ├── __init__.py
 │   ├── main_window.py           # Main application window
 │   ├── markdown_renderer.py     # Markdown parsing and rendering
 │   ├── theme_manager.py         # Theme registry and palette management
@@ -151,23 +124,23 @@ MDviewer/
 │   └── icons/                   # Generated cross-platform icon assets
 │       ├── app.ico              # Windows taskbar/window icon
 │       ├── app.icns             # macOS dock icon
-│       ├── app.png              # Linux default icon
-│       └── app_16x16.png … app_256x256.png
+│       └── app.png              # Linux default icon
 ├── assets/
 │   └── icons/                   # Original source icon files
 ├── tests/
 │   └── test_renderer.py         # Unit tests for renderer
-├── CHANGELOG.md
-├── AGENTS.md                    # Guide for AI agents working in this repo
-└── README.md
+└── CHANGELOG.md
 ```
 
 ## Testing
 
-Run the test suite:
 ```bash
 python tests/test_renderer.py
 ```
+
+## Version History
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
 
 ## License
 
