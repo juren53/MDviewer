@@ -1041,7 +1041,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = file_path
-                self.setWindowTitle(f"MDviewer - {os.path.basename(file_path)}")
+                self.setWindowTitle(f"MDviewer  |  {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Opened: {file_path}")
 
                 # Add to recent files
@@ -1072,7 +1072,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = last_file
-                self.setWindowTitle(f"MDviewer - {os.path.basename(last_file)}")
+                self.setWindowTitle(f"MDviewer  |  {os.path.basename(last_file)}")
                 self.status_bar.showMessage(f"Restored: {last_file}")
 
                 # Add to recent files
@@ -1121,7 +1121,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = file_path
-                self.setWindowTitle(f"MDviewer - {os.path.basename(file_path)}")
+                self.setWindowTitle(f"MDviewer  |  {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Opened: {file_path}")
 
                 # Add to recent files
@@ -1291,7 +1291,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = file_path
-                self.setWindowTitle(f"MDviewer - {os.path.basename(file_path)}")
+                self.setWindowTitle(f"MDviewer  |  {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Opened: {file_path}")
 
                 # Move to top of recent files
