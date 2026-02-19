@@ -49,6 +49,8 @@ class MarkdownRenderer:
         self.hide_paragraph_marks = False
         # Custom color overrides (populated from QSettings)
         self.custom_colors = {}
+        # Maps copy_id -> plain text for clipboard (populated each render)
+        self._copy_buffer = {}
 
         # Configure code highlighting
         self.extension_configs = {
@@ -149,6 +151,15 @@ class MarkdownRenderer:
                 .paragraph-marks-hidden .headerlink {{
                     display: none;
                 }}
+
+                a.copy-btn {{
+                    font-size: 11px;
+                    color: {colors["blockquote_color"]};
+                    text-decoration: none;
+                    border: 1px solid {colors["border_color"]};
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                }}
             """
 
     def render(self, text):
@@ -167,6 +178,9 @@ class MarkdownRenderer:
         else:
             # Add paragraph marks (periods) when visible
             html = self._add_paragraph_marks(html)
+
+        # Add copy buttons to code blocks
+        html = self._add_copy_buttons(html)
 
         # Wrap in theme-specific CSS
         theme_css = self.get_theme_css(self.current_theme, self.hide_paragraph_marks)
@@ -298,6 +312,41 @@ class MarkdownRenderer:
             return f"{before_tag}<span class='paragraph-mark'>.</span>{after_tag}"
 
         return line
+
+    def _add_copy_buttons(self, html):
+        """Wrap each syntax-highlighted code block with a Copy link."""
+        import html as html_module
+
+        self._copy_buffer = {}
+        counter = [0]
+
+        def extract_plain_text(snippet):
+            text = re.sub(r'<[^>]+>', '', snippet)
+            return html_module.unescape(text)
+
+        def replace_highlight_block(match):
+            block = match.group(0)
+            plain = extract_plain_text(block).strip()
+            if not plain:
+                return block
+            copy_id = counter[0]
+            counter[0] += 1
+            self._copy_buffer[copy_id] = plain
+            return (
+                f'<div>'
+                f'<div style="text-align:right; padding-bottom:2px;">'
+                f'<a href="copy:{copy_id}" class="copy-btn">Copy</a>'
+                f'</div>'
+                f'{block}'
+                f'</div>'
+            )
+
+        return re.sub(
+            r'<div class="highlight">.*?</div>',
+            replace_highlight_block,
+            html,
+            flags=re.DOTALL,
+        )
 
     def _get_github_css(self):
         """Get GitHub-style CSS for markdown rendering."""

@@ -5,6 +5,20 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2026-02-18 CST
+
+### Added
+- **Copy to clipboard button on code blocks** — each syntax-highlighted code block now shows a "Copy" link in the top-right corner, matching the familiar GitHub code block UX
+  - Clicking "Copy" copies the plain text of the code block to the clipboard via Qt's native clipboard API
+  - Status bar briefly confirms "Code copied to clipboard"
+  - Button color adapts to the current theme (uses theme border and muted text colors)
+  - Works with all fenced code blocks, with or without language specification
+
+### Version Bump
+- Version updated to 0.2.5 in `version.py`
+
+---
+
 ## [0.2.4] - 2026-02-17 CST
 
 ### Added

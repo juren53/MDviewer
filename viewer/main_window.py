@@ -812,6 +812,8 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(5, 5, 5, 5)
 
         self.text_browser = QTextBrowser()
+        self.text_browser.setOpenLinks(False)
+        self.text_browser.anchorClicked.connect(self._on_anchor_clicked)
         layout.addWidget(self.text_browser)
 
         central_widget.setLayout(layout)
@@ -1609,6 +1611,28 @@ class MainWindow(QMainWindow):
                 background: none;
             }}
         """)
+
+    def _on_anchor_clicked(self, url):
+        """Handle link clicks in the text browser."""
+        from PyQt6.QtGui import QDesktopServices
+
+        scheme = url.scheme()
+        if scheme == 'copy':
+            # Copy the code block text stored in the renderer buffer
+            # URL is "copy:N" so path() returns the numeric ID directly
+            try:
+                copy_id = int(url.path())
+                text = self.renderer._copy_buffer.get(copy_id, '')
+                if text:
+                    QApplication.clipboard().setText(text)
+                    self.status_bar.showMessage("Code copied to clipboard", 2000)
+            except (ValueError, AttributeError):
+                pass
+        elif not scheme and url.fragment():
+            # Internal anchor navigation (e.g. TOC links)
+            self.text_browser.scrollToAnchor(url.fragment())
+        elif scheme in ('http', 'https', 'ftp', 'mailto'):
+            QDesktopServices.openUrl(url)
 
     def _refresh_current_document(self):
         """Re-render and display the current document or welcome message."""
