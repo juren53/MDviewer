@@ -5,6 +5,17 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5b] - 2026-02-20 CST
+
+### Fixed
+- **`.desktop` file broken after `run.sh` introduction** — MDviewer was missing from the system menu and system tray
+  - Root cause: `Exec=` still pointed to `python3 main.py` directly, bypassing the virtualenv created by `run.sh`; all dependencies live in the venv so direct invocation fails silently
+  - Updated `Exec=` to use `run.sh %f` so the venv is activated before launch
+  - Fixed stale `/home/juren/` path typo in the source `MDviewer.desktop` (should be `/home/jure/`)
+  - Reinstalled the corrected `.desktop` file to `~/.local/share/applications/` and ran `update-desktop-database`
+
+---
+
 ## [0.2.5] - 2026-02-18 CST
 
 ### Added
