@@ -147,6 +147,7 @@ QSettings is used throughout the application with organization name "MDviewer":
 - Last opened file path
 - Theme preference ("dark" or "light")
 - Paragraph marks visibility ("hide_paragraph_marks" boolean)
+- Preferred external editor command ("external_editor" string)
 
 Settings are stored in platform-specific locations:
 - Linux: `~/.config/MDviewer/MDviewer.conf`
@@ -171,10 +172,13 @@ Settings are stored in platform-specific locations:
 ```
 viewer/
 ├── __init__.py
-├── main_window.py          # MainWindow class, ThemeManager, AboutDialog, QuickReferenceDialog
-├── markdown_renderer.py    # MarkdownRenderer with theme-aware CSS
-├── update_dialogs.py       # Version/update dialog components
-└── styles/                 # Future: Additional CSS resources
+├── main_window.py              # MainWindow class, ThemeManager, AboutDialog, QuickReferenceDialog
+├── markdown_renderer.py        # MarkdownRenderer with theme-aware CSS
+├── theme_manager.py            # Theme registry and palette management
+├── color_settings_dialog.py    # Per-theme color customization dialog
+├── external_editor.py          # Editor detection, picker dialog, and launcher
+├── file_info_dialog.py         # File metadata and info dialog
+└── update_dialogs.py           # Version/update dialog components
 ```
 
 ### Markdown Extensions
@@ -206,6 +210,27 @@ Code highlighting uses Pygments. Extension configs are defined in `MarkdownRende
 - Reload current document from disk via View → Refresh (F5)
 - Calls `_refresh_current_document()` which re-reads and re-renders the file
 - Useful for dynamic or externally-edited markdown files
+
+### Copy to Clipboard (Code Blocks)
+- Each fenced code block renders a "Copy" button in the top-right corner
+- Copies plain text of the block to the clipboard via Qt's native clipboard API
+- Status bar briefly confirms "Code copied to clipboard"
+- Button color adapts to the current theme (border and muted text colors)
+
+### File Info Dialog
+- Opened via File → Info (`Ctrl+I`)
+- Displays: file name, directory, full path, file type, size, line/word/character counts
+- Shows modified, accessed, and created timestamps; permissions (rwx + octal), owner, group
+- Detects symlink targets; all path fields are selectable and copyable
+- Implemented in `viewer/file_info_dialog.py`
+
+### Open in External Editor
+- Opened via Edit → Open in Editor (`Ctrl+E`)
+- First use shows a picker dialog listing all installed editors detected from `.desktop` files
+- Preference is saved to QSettings key `"external_editor"` for subsequent use
+- Terminal editors are wrapped in the system's terminal emulator automatically
+- Edit → Change Preferred Editor clears the saved choice and re-shows the picker
+- Implemented in `viewer/external_editor.py`
 
 ### Paragraph Marks
 - Toggle visibility via View → Hide Paragraph Marks (Ctrl+P)
