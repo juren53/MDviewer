@@ -166,24 +166,14 @@ class GitHubVersionChecker:
             while len(numeric_parts) < 3:
                 numeric_parts.append(0)
 
-            # Check for prerelease suffixes
-            prerelease_type = None
-            prerelease_rank = 0
-
-            # Look for suffix patterns
+            # Check for point-release letter suffix (a, b, c, ...)
+            # Suffixes denote releases AFTER the base: 0.2.5 < 0.2.5a < 0.2.5b
+            # No suffix is represented as -1 so that base < a (0) < b (1) < c (2)
+            suffix_rank = -1
             if re.search(r"[a-zA-Z]$", v):
-                last_char = v[-1].lower()
-                if last_char == "a":
-                    prerelease_type = "alpha"
-                    prerelease_rank = 0
-                elif last_char == "b":
-                    prerelease_type = "beta"
-                    prerelease_rank = 1
-                elif last_char == "c" and "rc" in v.lower():
-                    prerelease_type = "rc"
-                    prerelease_rank = 2
+                suffix_rank = ord(v[-1].lower()) - ord("a")
 
-            return (numeric_parts, prerelease_type, prerelease_rank)
+            return (numeric_parts, suffix_rank)
 
         v1_norm = normalize_version(version1)
         v2_norm = normalize_version(version2)
@@ -195,16 +185,11 @@ class GitHubVersionChecker:
             elif v1_norm[0][i] > v2_norm[0][i]:
                 return 1
 
-        # If numeric parts are equal, compare prerelease
-        if v1_norm[1] and not v2_norm[1]:
-            return -1  # prerelease < release
-        elif not v1_norm[1] and v2_norm[1]:
-            return 1  # release > prerelease
-        elif v1_norm[1] and v2_norm[1]:
-            if v1_norm[2] < v2_norm[2]:
-                return -1
-            elif v1_norm[2] > v2_norm[2]:
-                return 1
+        # Numeric parts equal — compare suffix rank (-1 = no suffix < 0 = a < 1 = b …)
+        if v1_norm[1] < v2_norm[1]:
+            return -1
+        elif v1_norm[1] > v2_norm[1]:
+            return 1
 
         return 0  # versions are equal
 
@@ -245,12 +230,15 @@ def test_version_checker():
     # Test version comparison
     print("2. Testing version comparison...")
     test_versions = [
-        ("0.2.18d", "0.2.18d", 0),
-        ("0.2.18", "0.2.19", -1),
-        ("0.2.19", "0.2.18", 1),
-        ("0.2.18a", "0.2.18", -1),
-        ("0.2.18", "0.2.18a", 1),
-        ("0.2.18b", "0.2.18a", 1),
+        ("0.2.18d", "0.2.18d", 0),   # equal
+        ("0.2.18", "0.2.19", -1),    # minor bump
+        ("0.2.19", "0.2.18", 1),     # minor bump reversed
+        ("0.2.18", "0.2.18a", -1),   # base < point-release a
+        ("0.2.18a", "0.2.18", 1),    # point-release a > base
+        ("0.2.18a", "0.2.18b", -1),  # a < b
+        ("0.2.18b", "0.2.18a", 1),   # b > a
+        ("0.2.18b", "0.2.18c", -1),  # b < c
+        ("0.2.18c", "0.2.19", -1),   # point-release < next minor
     ]
 
     for v1, v2, expected in test_versions:
