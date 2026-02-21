@@ -1,6 +1,6 @@
 # MDviewer
 
-**Version:** v0.2.0 (2026-02-03)
+**Version:** v0.2.5b (2026-02-20)
 
 A PyQt6-based Markdown viewer with GitHub-style rendering, 9 themes, and cross-platform icon support.
 
@@ -13,6 +13,9 @@ A PyQt6-based Markdown viewer with GitHub-style rendering, 9 themes, and cross-p
   - Popular: Solarized Dark, Solarized Light, Dracula, GitHub, Monokai, Nord, One Dark
   - Live theme switching without restart; `Ctrl+T` toggles dark/light
 - **Theme customization**: Per-theme color overrides with live preview for 7 elements (headings, body, background, links, blockquotes, code blocks, borders); factory reset per-theme or all at once
+- **Copy to clipboard** button on code blocks — one-click copy with status bar confirmation
+- **File info dialog** (`Ctrl+I`): metadata, line/word/character counts, permissions, timestamps
+- **Open in external editor** (`Ctrl+E`): detects installed editors, remembers preference; supports GUI and terminal editors
 - **Find in document** (`Ctrl+F`) with match highlighting and navigation
 - **Recent files and directories** with persistent storage
 - **Session restore**: Opens last viewed file on startup
@@ -86,6 +89,8 @@ python main.py yourfile.md
 | `Ctrl+T` | Toggle dark/light theme |
 | `Ctrl+P` | Hide/show paragraph marks |
 | `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Zoom in / out / reset |
+| `Ctrl+E` | Open in external editor |
+| `Ctrl+I` | File info |
 | `Ctrl+U` | Check for updates |
 | `F5` | Refresh current document |
 | `Ctrl+C` | Copy selected text |
@@ -118,6 +123,8 @@ MDviewer/
 │   ├── main_window.py           # Main application window
 │   ├── markdown_renderer.py     # Markdown parsing and rendering
 │   ├── theme_manager.py         # Theme registry and palette management
+│   ├── external_editor.py       # Editor detection, picker, and launcher
+│   ├── file_info_dialog.py      # File metadata and info dialog
 │   ├── color_settings_dialog.py # Color customization dialog
 │   └── update_dialogs.py        # Update checker UI dialogs
 ├── resources/
