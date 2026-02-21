@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixed stale `/home/juren/` path typo in the source `MDviewer.desktop` (should be `/home/jure/`)
   - Reinstalled the corrected `.desktop` file to `~/.local/share/applications/` and ran `update-desktop-database`
 
+### Enhanced
+- **`run.sh` robustness improvements** — ported from juren53/Python-venv template
+  - `test_venv_valid()`: reads `pyvenv.cfg` to detect broken venv path references and auto-recreates instead of failing cryptically
+  - `find_python()`: searches `python3`/`python` and common fixed paths to locate a working system Python, bypassing any activated broken venv
+  - Improved error messages with install hints
+
 ---
 
 ## [0.2.5] - 2026-02-18 CST
