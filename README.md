@@ -1,6 +1,6 @@
 # MDviewer
 
-**Version:** v0.2.5b (2026-02-20)
+**Version:** v0.2.5c (2026-02-21)
 
 A PyQt6-based Markdown viewer with GitHub-style rendering, 9 themes, and cross-platform icon support.
 

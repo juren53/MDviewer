@@ -5,6 +5,15 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5c] - 2026-02-21 CST
+
+### Fixed
+- **`compare_versions` treated letter suffixes as pre-releases** — `0.2.5a`/`0.2.5b` were incorrectly ranked below `0.2.5`, causing the update checker to report a spurious update available
+  - Replaced alpha/beta/rc pre-release logic with a simple suffix rank (`-1` = no suffix < `a` < `b` < `c` …)
+  - Correct ordering is now enforced: `0.2.5 < 0.2.5a < 0.2.5b < 0.2.5c < 0.2.6`
+
+---
+
 ## [0.2.5b] - 2026-02-20 CST
 
 ### Fixed
