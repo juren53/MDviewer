@@ -758,7 +758,7 @@ class MainWindow(QMainWindow):
             "juren53/MDviewer", "version.py"
         )
 
-        self.setWindowTitle("MDviewer")
+        self.setWindowTitle(f"MDviewer v{__version__}")
 
         # Set window icon via IconLoader
         from icon_loader import icons
@@ -1046,7 +1046,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = file_path
-                self.setWindowTitle(f"MDviewer  |  {os.path.basename(file_path)}")
+                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Opened: {file_path}")
 
                 # Add to recent files
@@ -1077,7 +1077,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = last_file
-                self.setWindowTitle(f"MDviewer  |  {os.path.basename(last_file)}")
+                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(last_file)}")
                 self.status_bar.showMessage(f"Restored: {last_file}")
 
                 # Add to recent files
@@ -1126,7 +1126,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = file_path
-                self.setWindowTitle(f"MDviewer  |  {os.path.basename(file_path)}")
+                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Opened: {file_path}")
 
                 # Add to recent files
@@ -1319,7 +1319,7 @@ class MainWindow(QMainWindow):
                 self.text_browser.setHtml(html_content)
 
                 self.current_file = file_path
-                self.setWindowTitle(f"MDviewer  |  {os.path.basename(file_path)}")
+                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
                 self.status_bar.showMessage(f"Opened: {file_path}")
 
                 # Move to top of recent files
@@ -1966,4 +1966,13 @@ class MainWindow(QMainWindow):
             ],
         )
         info = gather_info(identity, caller_file=__file__)
-        AboutDialog(info, parent=self).exec()
+        dialog = AboutDialog(info, parent=self)
+        dialog.setStyleSheet("""
+            QLabel {
+                font-size: 12pt;
+            }
+            QLabel p {
+                font-size: 11pt;
+            }
+        """)
+        dialog.exec()

@@ -5,6 +5,20 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2026-02-22 CST
+
+### Added
+- **File → Copy FQFN to Clipboard** — Copies the fully-qualified filename of the current document to the system clipboard
+  - Displays a confirmation popup with the copied path
+  - Status bar also shows confirmation message
+  - Helpful for quickly getting the file path to share or use elsewhere
+
+### Enhanced
+- **Version number in title bar** — Window title now displays the current version (e.g., "MDviewer v0.2.6 | filename.md")
+- **About dialog font size increased** — Improved readability of the Help → About dialog
+
+---
+
 ## [0.2.5d] - 2026-02-22 CST
 
 ### Added
