@@ -5,6 +5,16 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5d] - 2026-02-22 CST
+
+### Added
+- **File → Copy FQFN to Clipboard** — Copies the fully-qualified filename of the current document to the system clipboard
+  - Displays a confirmation popup with the copied path
+  - Status bar also shows confirmation message
+  - Helpful for quickly getting the file path to share or use elsewhere
+
+---
+
 ## [0.2.5c] - 2026-02-21 CST
 
 ### Fixed

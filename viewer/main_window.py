@@ -846,6 +846,11 @@ class MainWindow(QMainWindow):
         info_action.triggered.connect(self.show_file_info)
         file_menu.addAction(info_action)
 
+        copy_fqfn_action = QAction("Copy FQFN to Clipboard", self)
+        copy_fqfn_action.setStatusTip("Copy the fully-qualified filename to clipboard")
+        copy_fqfn_action.triggered.connect(self.copy_fqfn_to_clipboard)
+        file_menu.addAction(copy_fqfn_action)
+
         file_menu.addSeparator()
 
         exit_action = QAction("E&xit", self)
@@ -1149,6 +1154,29 @@ class MainWindow(QMainWindow):
 
         dialog = FileInfoDialog(self.current_file, self)
         dialog.exec()
+
+    def copy_fqfn_to_clipboard(self):
+        """Copy the fully-qualified filename of the current document to clipboard"""
+        if not self.current_file:
+            QMessageBox.information(
+                self, "No File",
+                "No file is currently open.\n\nOpen a file first with File → Open."
+            )
+            return
+
+        clipboard = QApplication.clipboard()
+        clipboard.setText(self.current_file)
+
+        self.status_bar.showMessage(f"FQFN copied: {self.current_file}", 5000)
+
+        popup = QMessageBox()
+        popup.setWindowTitle("Copied")
+        popup.setText(f"FQFN copied to clipboard:\n{self.current_file}")
+        popup.setWindowFlags(
+            popup.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint | Qt.WindowType.WindowStaysOnTopHint
+        )
+        popup.setStandardButtons(QMessageBox.StandardButton.Ok)
+        popup.exec()
 
     def open_in_editor(self):
         """Open current document in an external text editor"""
