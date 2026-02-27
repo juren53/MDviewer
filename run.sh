@@ -84,5 +84,11 @@ if [ ! -f "$MARKER" ] || [ "$REQUIREMENTS" -nt "$MARKER" ]; then
     touch "$MARKER"
 fi
 
+# Ensure XDG_DATA_DIRS includes system paths required for GIO MIME detection.
+# Without /usr/share, gdk-pixbuf cannot identify image formats and GTK crashes.
+if [ -z "$XDG_DATA_DIRS" ]; then
+    export XDG_DATA_DIRS="/usr/local/share:/usr/share"
+fi
+
 # Launch the application, passing through any command-line arguments
 python "$ENTRY_POINT" "$@"

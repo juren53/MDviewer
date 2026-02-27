@@ -5,6 +5,25 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-02-27 CST
+
+### Fixed
+- **Startup crash on LMDE/Cinnamon** — App aborted immediately with a fatal GTK error
+  (`Unrecognized image file format` for `image-missing.png`) when `XDG_DATA_DIRS` was
+  empty or unset in the shell environment
+- **Root cause:** Empty `XDG_DATA_DIRS` prevents GIO from locating the system MIME
+  database at `/usr/share/mime/`, causing gdk-pixbuf to fail format detection for all
+  image types; Qt6's GTK3 platform theme (loaded automatically on Cinnamon) then crashes
+  trying to render the `image-missing.png` icon fallback
+- **Fix:** `run.sh` now sets `XDG_DATA_DIRS=/usr/local/share:/usr/share` when the
+  variable is empty, ensuring GIO can find the system MIME database
+
+### Added
+- `notes/ANALYSIS_MDv-Linux-PDF-XDG-PNG-issues.md` — detailed root-cause analysis of
+  the GTK/gdk-pixbuf/GIO/XDG_DATA_DIRS crash chain
+
+---
+
 ## [0.3.0] - 2026-02-27 CST
 
 ### Added
