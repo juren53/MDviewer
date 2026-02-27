@@ -191,3 +191,6 @@ appimagetool
 appimagetool-x86_64.AppImage
 appimage_build/
 *.AppImage
+
+# Generated desktop entry (system-specific paths — generate from MDviewer.desktop.template)
+MDviewer.desktop
