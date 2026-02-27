@@ -23,8 +23,10 @@ a = Analysis(
     ],
     hiddenimports=[
         'PyQt6.QtCore',
-        'PyQt6.QtGui', 
+        'PyQt6.QtGui',
         'PyQt6.QtWidgets',
+        'PyQt6.QtPdf',
+        'PyQt6.QtPdfWidgets',
         'markdown',
         'markdown.extensions',
         'markdown.extensions.tables',

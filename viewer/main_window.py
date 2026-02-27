@@ -19,6 +19,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QListWidget,
     QListWidgetItem,
+    QStackedWidget,
 )
 from PyQt6.QtCore import Qt, QThread, QTimer, pyqtSignal, QSettings, QObject
 from PyQt6.QtWidgets import QApplication
@@ -33,6 +34,7 @@ from PyQt6.QtGui import (
     QTextDocument,
 )
 from .markdown_renderer import MarkdownRenderer
+from .pdf_viewer import PdfViewerWidget
 from .color_settings_dialog import ColorSettingsDialog
 from .file_info_dialog import FileInfoDialog
 from .external_editor import (open_in_external_editor, change_preferred_editor,
@@ -811,15 +813,27 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.setContentsMargins(5, 5, 5, 5)
 
+        self.content_stack = QStackedWidget()
+
         self.text_browser = QTextBrowser()
         self.text_browser.setOpenLinks(False)
         self.text_browser.anchorClicked.connect(self._on_anchor_clicked)
-        layout.addWidget(self.text_browser)
+
+        self.pdf_viewer = PdfViewerWidget(self)
+
+        self.content_stack.addWidget(self.text_browser)   # index 0
+        self.content_stack.addWidget(self.pdf_viewer)     # index 1
+        self.content_stack.setCurrentIndex(0)
+
+        layout.addWidget(self.content_stack)
 
         central_widget.setLayout(layout)
 
+        self.pdf_viewer.page_changed.connect(self._on_pdf_page_changed)
+
     def setup_menu(self):
         menubar = self.menuBar()
+        self._md_only_actions = []
 
         # File Menu
         file_menu = menubar.addMenu("&File")
@@ -867,6 +881,7 @@ class MainWindow(QMainWindow):
         find_action.setStatusTip("Find text in document")
         find_action.triggered.connect(self.show_find_dialog)
         edit_menu.addAction(find_action)
+        self._md_only_actions.append(find_action)
 
         edit_menu.addSeparator()
 
@@ -875,12 +890,14 @@ class MainWindow(QMainWindow):
         copy_action.setStatusTip("Copy selected text")
         copy_action.triggered.connect(self.text_browser.copy)
         edit_menu.addAction(copy_action)
+        self._md_only_actions.append(copy_action)
 
         select_all_action = QAction("Select &All", self)
         select_all_action.setShortcut("Ctrl+A")
         select_all_action.setStatusTip("Select all text")
         select_all_action.triggered.connect(self.text_browser.selectAll)
         edit_menu.addAction(select_all_action)
+        self._md_only_actions.append(select_all_action)
 
         edit_menu.addSeparator()
 
@@ -889,6 +906,7 @@ class MainWindow(QMainWindow):
         edit_external_action.setStatusTip("Open current document in external text editor")
         edit_external_action.triggered.connect(self.open_in_editor)
         edit_menu.addAction(edit_external_action)
+        self._md_only_actions.append(edit_external_action)
 
         change_editor_action = QAction("Change &Preferred Editor...", self)
         change_editor_action.setStatusTip("Select a different text editor")
@@ -903,6 +921,7 @@ class MainWindow(QMainWindow):
         refresh_action.setStatusTip("Reload the current document")
         refresh_action.triggered.connect(self._refresh_current_document)
         view_menu.addAction(refresh_action)
+        self._md_only_actions.append(refresh_action)
 
         view_menu.addSeparator()
 
@@ -911,18 +930,21 @@ class MainWindow(QMainWindow):
         zoom_in_action.setStatusTip("Increase font size")
         zoom_in_action.triggered.connect(self.zoom_in)
         view_menu.addAction(zoom_in_action)
+        self._md_only_actions.append(zoom_in_action)
 
         zoom_out_action = QAction("Zoom &Out", self)
         zoom_out_action.setShortcut("Ctrl+-")
         zoom_out_action.setStatusTip("Decrease font size")
         zoom_out_action.triggered.connect(self.zoom_out)
         view_menu.addAction(zoom_out_action)
+        self._md_only_actions.append(zoom_out_action)
 
         reset_zoom_action = QAction("&Reset Zoom", self)
         reset_zoom_action.setShortcut("Ctrl+0")
         reset_zoom_action.setStatusTip("Reset font size")
         reset_zoom_action.triggered.connect(self.reset_zoom)
         view_menu.addAction(reset_zoom_action)
+        self._md_only_actions.append(reset_zoom_action)
 
         view_menu.addSeparator()
 
@@ -995,6 +1017,7 @@ class MainWindow(QMainWindow):
         hide_marks_action.setChecked(self.hide_paragraph_marks)
         hide_marks_action.triggered.connect(self.toggle_paragraph_marks)
         view_menu.addAction(hide_marks_action)
+        self._md_only_actions.append(hide_marks_action)
 
         # Help Menu
         help_menu = menubar.addMenu("&Help")
@@ -1035,56 +1058,83 @@ class MainWindow(QMainWindow):
         self.status_bar.addPermanentWidget(version_label)
 
     def load_file_from_path(self, file_path):
-        """Load a markdown file from the given path."""
-        if os.path.exists(file_path) and os.path.isfile(file_path):
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                # Render markdown to HTML
-                html_content = self.renderer.render(content)
-                self.text_browser.setHtml(html_content)
-
-                self.current_file = file_path
-                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
-                self.status_bar.showMessage(f"Opened: {file_path}")
-
-                # Add to recent files
-                self.add_to_recent_files(file_path)
-                return True
-            except Exception as e:
-                # If loading fails, show error
-                self.status_bar.showMessage(f"Error loading {file_path}: {str(e)}")
-                QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
-                return False
-        else:
+        """Load a file (markdown or PDF) from the given path."""
+        if not (os.path.exists(file_path) and os.path.isfile(file_path)):
             self.status_bar.showMessage(f"File not found: {file_path}")
             QMessageBox.warning(
                 self, "File Not Found", f"The file {file_path} does not exist."
             )
             return False
 
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext == ".pdf":
+            return self._load_pdf_file(file_path)
+        else:
+            return self._load_markdown_file(file_path)
+
+    def _load_markdown_file(self, file_path):
+        """Load and render a markdown file."""
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            html_content = self.renderer.render(content)
+            self.text_browser.setHtml(html_content)
+
+            self.content_stack.setCurrentIndex(0)
+            self.current_file = file_path
+            self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
+            self.status_bar.showMessage(f"Opened: {file_path}")
+            self.add_to_recent_files(file_path)
+            self._update_pdf_menu_states()
+            return True
+        except Exception as e:
+            self.status_bar.showMessage(f"Error loading {file_path}: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
+            return False
+
+    def _load_pdf_file(self, file_path):
+        """Load a PDF file into the PDF viewer."""
+        success = self.pdf_viewer.load_pdf(file_path)
+        if success:
+            page_count = self.pdf_viewer._document.pageCount()
+            self.content_stack.setCurrentIndex(1)
+            self.current_file = file_path
+            self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
+            self.status_bar.showMessage(
+                f"Page 1 of {page_count}  —  {os.path.basename(file_path)}"
+            )
+            self.add_to_recent_files(file_path)
+            self._update_pdf_menu_states()
+            return True
+        else:
+            QMessageBox.critical(
+                self, "Error", f"Could not open PDF: {file_path}"
+            )
+            return False
+
+    def _is_pdf_mode(self) -> bool:
+        return self.content_stack.currentIndex() == 1
+
+    def _update_pdf_menu_states(self):
+        is_md = not self._is_pdf_mode()
+        for action in self._md_only_actions:
+            action.setEnabled(is_md)
+
+    def _on_pdf_page_changed(self, current_page: int, page_count: int):
+        self.status_bar.showMessage(
+            f"Page {current_page} of {page_count}  —  {os.path.basename(self.current_file)}"
+        )
+
     def load_last_opened_file(self):
         """Load the last opened file from settings."""
         last_file = self.settings.value("last_opened_file")
         if last_file and os.path.exists(last_file):
             try:
-                with open(last_file, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                # Render markdown to HTML
-                html_content = self.renderer.render(content)
-                self.text_browser.setHtml(html_content)
-
-                self.current_file = last_file
-                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(last_file)}")
-                self.status_bar.showMessage(f"Restored: {last_file}")
-
-                # Add to recent files
-                self.add_to_recent_files(last_file)
-                return
-            except Exception as e:
-                # If loading fails, fall back to welcome message
+                if self.load_file_from_path(last_file):
+                    self.status_bar.showMessage(f"Restored: {last_file}")
+                    return
+            except Exception:
                 pass
 
         # Show welcome message if no last file or loading failed
@@ -1111,30 +1161,13 @@ class MainWindow(QMainWindow):
     def open_file(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Open Markdown File",
+            "Open File",
             "",
-            "Markdown Files (*.md *.markdown);;All Files (*)",
+            "Supported Files (*.md *.markdown *.pdf);;Markdown Files (*.md *.markdown);;PDF Files (*.pdf);;All Files (*)",
         )
 
         if file_path:
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                # Render markdown to HTML
-                html_content = self.renderer.render(content)
-                self.text_browser.setHtml(html_content)
-
-                self.current_file = file_path
-                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
-                self.status_bar.showMessage(f"Opened: {file_path}")
-
-                # Add to recent files
-                self.add_to_recent_files(file_path)
-
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
-                self.status_bar.showMessage("Error opening file")
+            self.load_file_from_path(file_path)
 
     def show_file_info(self):
         """Show file information dialog for the current document"""
@@ -1212,6 +1245,9 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(f"Preferred editor set to: {editor}")
 
     def zoom_in(self):
+        if self._is_pdf_mode():
+            self.pdf_viewer.zoom_in()
+            return
         current_font = self.text_browser.font()
         current_size = current_font.pointSize()
         if current_size < 24:
@@ -1219,6 +1255,9 @@ class MainWindow(QMainWindow):
             self.text_browser.setFont(current_font)
 
     def zoom_out(self):
+        if self._is_pdf_mode():
+            self.pdf_viewer.zoom_out()
+            return
         current_font = self.text_browser.font()
         current_size = current_font.pointSize()
         if current_size > 6:
@@ -1226,6 +1265,9 @@ class MainWindow(QMainWindow):
             self.text_browser.setFont(current_font)
 
     def reset_zoom(self):
+        if self._is_pdf_mode():
+            self.pdf_viewer.reset_zoom()
+            return
         font = QFont("Consolas", 11)
         self.text_browser.setFont(font)
 
@@ -1310,29 +1352,11 @@ class MainWindow(QMainWindow):
     def open_recent_file(self, file_path):
         """Open a recent file."""
         if os.path.exists(file_path):
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    content = f.read()
-
-                # Render markdown to HTML
-                html_content = self.renderer.render(content)
-                self.text_browser.setHtml(html_content)
-
-                self.current_file = file_path
-                self.setWindowTitle(f"MDviewer v{__version__}  |  {os.path.basename(file_path)}")
-                self.status_bar.showMessage(f"Opened: {file_path}")
-
-                # Move to top of recent files
-                self.add_to_recent_files(file_path)
-
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"Could not open file: {str(e)}")
-                self.status_bar.showMessage("Error opening file")
+            self.load_file_from_path(file_path)
         else:
             QMessageBox.warning(
                 self, "File Not Found", f"The file {file_path} no longer exists."
             )
-            # Remove from recent files
             if file_path in self.recent_files:
                 self.recent_files.remove(file_path)
                 self.update_recent_files_menu()
@@ -1406,9 +1430,9 @@ class MainWindow(QMainWindow):
         """Open a file dialog starting in the selected recent directory."""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Open Markdown File",
+            "Open File",
             dir_path,
-            "Markdown Files (*.md *.markdown);;All Files (*)",
+            "Supported Files (*.md *.markdown *.pdf);;Markdown Files (*.md *.markdown);;PDF Files (*.pdf);;All Files (*)",
         )
 
         if file_path:
@@ -1423,6 +1447,9 @@ class MainWindow(QMainWindow):
     def keyPressEvent(self, event):
         """Handle keyboard shortcuts — 'b' pages backward (like less)."""
         if event.key() == Qt.Key.Key_B and not event.modifiers():
+            if self._is_pdf_mode():
+                super().keyPressEvent(event)
+                return
             scrollbar = self.text_browser.verticalScrollBar()
             scrollbar.setValue(
                 scrollbar.value() - self.text_browser.viewport().height()
@@ -1481,6 +1508,9 @@ class MainWindow(QMainWindow):
         # Apply to current text browser if it exists
         if hasattr(self, "text_browser"):
             self._apply_text_browser_stylesheet()
+
+        if hasattr(self, "pdf_viewer"):
+            self.pdf_viewer.apply_theme(theme_name, self.renderer)
 
     def switch_theme(self, theme_name):
         """Switch between dark and light themes"""
@@ -1664,6 +1694,8 @@ class MainWindow(QMainWindow):
 
     def _refresh_current_document(self):
         """Re-render and display the current document or welcome message."""
+        if self._is_pdf_mode():
+            return
         if self.current_file:
             self.load_file_from_path(self.current_file)
         else:
@@ -1749,6 +1781,8 @@ class MainWindow(QMainWindow):
 
     def show_find_dialog(self):
         """Show Find dialog"""
+        if self._is_pdf_mode():
+            return
         # Recreate dialog if theme changed or doesn't exist
         if not self.find_dialog or self.find_dialog.theme != self.current_theme:
             self.setup_find_dialog()

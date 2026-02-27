@@ -5,6 +5,39 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-02-27 CST
+
+### Added
+- **PDF viewing** — MDviewer can now open and display PDF files natively
+  - `File → Open` and `Open Recent Files` now accept `.pdf` files alongside `.md`/`.markdown`
+  - File dialog filter updated: "Supported Files (*.md *.markdown *.pdf)"
+  - PDF documents render via `QPdfView` (PyQt6.QtPdfWidgets) — no extra dependencies required
+  - **Navigation bar** — compact 36px bar above the PDF view with:
+    - Prev / Next page buttons
+    - Page spin box for direct page jump
+    - Page count label ("/ N")
+    - Zoom − / % label / + controls (0.25× – 4.00×, step 0.10)
+  - Nav bar is hidden when no PDF is loaded; appears automatically on open
+  - Status bar shows "Page X of N — filename.pdf" and updates on page change
+  - Session restore: closing with a PDF open restores it on next launch
+  - Recent files list tracks PDFs alongside markdown files
+
+### Changed
+- Central widget is now a `QStackedWidget` (index 0 = markdown, index 1 = PDF)
+- Markdown-only menu actions (Find, Copy, Select All, Open in Editor, Refresh, Zoom In/Out/Reset, Hide Paragraph Marks) are automatically disabled when a PDF is active and re-enabled when switching back to markdown
+- `zoom_in` / `zoom_out` / `reset_zoom` delegate to the PDF viewer when a PDF is active
+- Theme switching (Ctrl+T) re-colours the PDF nav bar and scroll bars to match the active theme
+
+### Technical
+- New module: `viewer/pdf_viewer.py` — `PdfViewerWidget(QWidget)` wrapping `QPdfView`
+  - `load_pdf(path)` — opens via `QPdfDocument`, checks `Status.Ready`
+  - `apply_theme(theme_name, renderer)` — live stylesheet update for view + nav bar
+  - `page_changed` signal emits `(current_1based, total)` on navigator page changes
+- `load_file_from_path()` split into `_load_markdown_file()` and `_load_pdf_file()`, dispatching by file extension
+- `open_file()`, `open_recent_file()`, `load_last_opened_file()` consolidated to call `load_file_from_path()`
+
+---
+
 ## [0.2.6] - 2026-02-22 CST
 
 ### Added
