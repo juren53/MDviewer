@@ -6,6 +6,7 @@ GenericName=Markdown Viewer
 Comment=A simple markdown file viewer
 Exec=INSTALL_DIR/run.sh %f
 Icon=INSTALL_DIR/resources/icons/app_256x256.png
+Path=INSTALL_DIR
 Terminal=false
 Categories=Office;Viewer;TextTools;Utility;
 MimeType=text/markdown;text/x-markdown;
