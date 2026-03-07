@@ -1697,7 +1697,9 @@ class MainWindow(QMainWindow):
         if self._is_pdf_mode():
             return
         if self.current_file:
+            scroll_pos = self.text_browser.verticalScrollBar().value()
             self.load_file_from_path(self.current_file)
+            self.text_browser.verticalScrollBar().setValue(scroll_pos)
         else:
             self.show_welcome_message()
 
