@@ -238,9 +238,9 @@ def _launch_editor(editor_cmd, file_path):
             if not term:
                 return False, "No terminal emulator found to run terminal-based editor."
             # Most terminal emulators accept -e command
-            subprocess.Popen([term, "-e", editor_cmd, file_path])
+            subprocess.Popen([term, "-e", editor_cmd, file_path], start_new_session=True)
         else:
-            subprocess.Popen([editor_cmd, file_path])
+            subprocess.Popen([editor_cmd, file_path], start_new_session=True)
         return True, None
     except Exception as e:
         return False, str(e)
