@@ -5,6 +5,17 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-06-18 CST
+
+### Fixed
+- **PNG and JPEG images now display correctly** — relative image paths in markdown
+  (e.g. `<img src="codes/image.png">` or `![alt](images/photo.jpg)`) were silently
+  ignored because `QTextBrowser.setHtml()` has no base URL context; the renderer now
+  converts all relative `src` attributes to absolute `file://` URLs based on the
+  directory of the open markdown file, so local images resolve correctly
+
+---
+
 ## [0.3.3] - 2026-03-25 CST
 
 ### Fixed

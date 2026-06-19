@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -1072,6 +1073,20 @@ class MainWindow(QMainWindow):
         else:
             return self._load_markdown_file(file_path)
 
+    def _resolve_image_paths(self, html, file_path):
+        """Convert relative img src paths to absolute file:// URLs."""
+        from PyQt6.QtCore import QUrl
+        base_dir = os.path.dirname(os.path.abspath(file_path))
+
+        def replace_src(match):
+            src = match.group(1)
+            if src.startswith(('http://', 'https://', 'ftp://', 'file://', 'data:', '/')):
+                return match.group(0)
+            abs_path = os.path.normpath(os.path.join(base_dir, src))
+            return f'src="{QUrl.fromLocalFile(abs_path).toString()}"'
+
+        return re.sub(r'src="([^"]*)"', replace_src, html)
+
     def _load_markdown_file(self, file_path):
         """Load and render a markdown file."""
         try:
@@ -1079,6 +1094,7 @@ class MainWindow(QMainWindow):
                 content = f.read()
 
             html_content = self.renderer.render(content)
+            html_content = self._resolve_image_paths(html_content, file_path)
             self.text_browser.setHtml(html_content)
 
             self.content_stack.setCurrentIndex(0)
