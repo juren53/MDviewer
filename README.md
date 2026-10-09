@@ -40,7 +40,7 @@ A PyQt6-based Markdown viewer with GitHub-style rendering, 9 themes, and cross-p
 **Linux / macOS / AppImage (no Python needed):**
 ```bash
 # AppImage — portable, no dependencies required
-wget https://github.com/juren53/MDviewer/releases/download/v0.2.0/MDviewer-x86_64.AppImage
+wget https://github.com/juren53/MDviewer/releases/download/v0.3.3/MDviewer-x86_64.AppImage
 chmod +x MDviewer-x86_64.AppImage
 ./MDviewer-x86_64.AppImage
 
@@ -50,7 +50,11 @@ cd MDviewer
 ./run.sh
 ```
 
-**Windows (PowerShell):**
+**Windows (standalone EXE, no Python needed):**
+
+Download [MDviewer.exe (v0.3.0)](https://github.com/juren53/MDviewer/releases/download/v0.3.0/MDviewer.exe) and run it — a single-file executable, no installation required. Windows SmartScreen may warn about an unrecognized app; click **More info → Run anyway**.
+
+**Windows from source (PowerShell):**
 ```powershell
 git clone https://github.com/juren53/MDviewer.git
 cd MDviewer
