@@ -5,7 +5,35 @@ All notable changes to MDviewer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.4] - 2026-06-18 CST
+## [Unreleased]
+
+### Fixed
+- **`run.ps1` no longer launches with missing dependencies after a failed install** —
+  the `.deps_installed` marker was written even when `pip install` failed (e.g. SSL
+  errors behind a TLS-inspecting proxy), so later runs skipped the install; the script
+  now stops on a pip failure and leaves the marker unwritten so the next run retries
+- **`build.bat` builds with the project venv** — previously it called whatever
+  `pyinstaller` was first on `PATH` (possibly another project's venv), which bundled
+  the wrong set of packages; it now runs `venv\Scripts\python.exe -m PyInstaller`,
+  installs `requirements.txt` + PyInstaller into the venv first, runs from the
+  script's own directory, and exits with an error if the venv is missing or the
+  install/build fails
+- **`release.bat` builds with the project venv** — same fix as `build.bat`; the venv
+  check runs before any push or tag, so a missing venv aborts the release cleanly
+
+### Documentation
+- `README.md`: Added a standalone Windows EXE download option ("no Python needed")
+  using the `releases/latest/download/MDviewer.exe` link, renamed the PowerShell
+  section to "Windows from source", updated the AppImage link to v0.3.3, and bumped
+  the README version to v0.3.4
+
+### Release Artifacts
+- `MDviewer.exe` rebuilt from v0.3.4 and attached to the v0.3.4 GitHub release (no
+  EXE had been published since v0.3.0, so the README's latest-release link returned 404)
+
+---
+
+## [0.3.4] - 2026-06-18 2032 CDT
 
 ### Fixed
 - **PNG and JPEG images now display correctly** — relative image paths in markdown
@@ -16,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.3] - 2026-03-25 CST
+## [0.3.3] - 2026-03-25 2014 CDT
 
 ### Fixed
 - **External editor no longer leaves zombie processes** — launching an editor via
@@ -24,18 +52,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   detaching the child into its own process group so the OS reaps it on exit instead of leaving
   a `<defunct>` zombie attached to the MDviewer Python process
 
+### Release Artifacts
+- `MDviewer-x86_64.AppImage` attached to the v0.3.3 GitHub release
+
 ---
 
-## [0.3.2] - 2026-03-07 CST
+## [0.3.2] - 2026-03-07 1228 CST
 
 ### Fixed
 - **Refresh preserves scroll position** — pressing F5 or triggering a refresh no longer
   jumps back to the top of the document; the view returns to the same position it was at
   before the reload
 
+### Documentation
+- `README.md`: Removed the "WTF is this" section
+- `notes/`: Added notes on a possible ebook viewer
+
 ---
 
-## [0.3.1] - 2026-02-27 CST
+## [0.3.1] - 2026-02-27 1002 CST
 
 ### Fixed
 - **Startup crash on LMDE/Cinnamon** — App aborted immediately with a fatal GTK error
@@ -47,14 +82,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trying to render the `image-missing.png` icon fallback
 - **Fix:** `run.sh` now sets `XDG_DATA_DIRS=/usr/local/share:/usr/share` when the
   variable is empty, ensuring GIO can find the system MIME database
+- **System menu launch bypassed `run.sh`** — the installed `.desktop` file's `Exec=`
+  called `python3 main.py` directly, skipping venv activation (PyQt6 not found) and
+  the `XDG_DATA_DIRS` fix above; `Exec=` now points to `run.sh %f`, and
+  `Path=INSTALL_DIR` was added to `MDviewer.desktop.template` so the working directory
+  is explicit for new installs
 
 ### Added
 - `notes/ANALYSIS_MDv-Linux-PDF-XDG-PNG-issues.md` — detailed root-cause analysis of
   the GTK/gdk-pixbuf/GIO/XDG_DATA_DIRS crash chain
+- `notes/`: PDF viewing implementation plan and a session summary on resolving a git
+  branch divergence
 
 ---
 
-## [0.3.0] - 2026-02-27 CST
+## [0.3.0] - 2026-02-27 0821 CST
 
 ### Added
 - **PDF viewing** — MDviewer can now open and display PDF files natively
@@ -85,9 +127,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `load_file_from_path()` split into `_load_markdown_file()` and `_load_pdf_file()`, dispatching by file extension
 - `open_file()`, `open_recent_file()`, `load_last_opened_file()` consolidated to call `load_file_from_path()`
 
+### Changed
+- **Portable `.desktop` template** — the system-specific `MDviewer.desktop` was replaced
+  by `MDviewer.desktop.template`, which uses an `INSTALL_DIR` placeholder instead of
+  hardcoded paths; the generated `MDviewer.desktop` is now in `.gitignore` so each
+  user's local copy is never tracked
+
+### Release Artifacts
+- `MDviewer.exe` attached to the v0.3.0 GitHub release
+
 ---
 
-## [0.2.6] - 2026-02-22 CST
+## [0.2.6] - 2026-02-22 1154 CST
 
 ### Added
 - **File → Copy FQFN to Clipboard** — Copies the fully-qualified filename of the current document to the system clipboard
@@ -99,19 +150,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Version number in title bar** — Window title now displays the current version (e.g., "MDviewer v0.2.6 | filename.md")
 - **About dialog font size increased** — Improved readability of the Help → About dialog
 
+### Release Artifacts
+- `MDviewer.exe` attached to the v0.2.6 GitHub release
+
 ---
 
-## [0.2.5d] - 2026-02-22 CST
+## [0.2.5d] - 2026-02-22 1059 CST
 
 ### Added
 - **File → Copy FQFN to Clipboard** — Copies the fully-qualified filename of the current document to the system clipboard
   - Displays a confirmation popup with the copied path
   - Status bar also shows confirmation message
   - Helpful for quickly getting the file path to share or use elsewhere
+- **`release.bat`** — Windows release automation script: reads the version from
+  `version.py`, refuses to run with uncommitted changes, pushes to GitHub, builds the
+  EXE with PyInstaller, creates the `v<version>` git tag, publishes a GitHub release
+  with `MDviewer.exe` attached, and copies the EXE to `~\bin\MDviewer.exe`
+
+### Release Artifacts
+- `MDviewer.exe` attached to the v0.2.5d GitHub release
 
 ---
 
-## [0.2.5c] - 2026-02-21 CST
+## [0.2.5c] - 2026-02-21 0047 CST
 
 ### Fixed
 - **`compare_versions` treated letter suffixes as pre-releases** — `0.2.5a`/`0.2.5b` were incorrectly ranked below `0.2.5`, causing the update checker to report a spurious update available
@@ -120,7 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5b] - 2026-02-20 CST
+## [0.2.5b] - 2026-02-20 1523 CST
 
 ### Fixed
 - **`.desktop` file broken after `run.sh` introduction** — MDviewer was missing from the system menu and system tray
@@ -135,9 +196,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `find_python()`: searches `python3`/`python` and common fixed paths to locate a working system Python, bypassing any activated broken venv
   - Improved error messages with install hints
 
+### Documentation
+- `README.md`: Updated to v0.2.5b — version, features, keyboard shortcuts, and project structure
+- `AGENTS.md`: Updated module structure, settings keys, and feature docs (File Info,
+  External Editor, Copy to Clipboard)
+
 ---
 
-## [0.2.5] - 2026-02-18 CST
+## [0.2.5a] - 2026-02-19 0620 CST
+
+### Changed
+- **Title bar separator** — window title changed from `MDviewer - filename` to
+  `MDviewer  |  filename`
+
+---
+
+## [0.2.5] - 2026-02-18 2327 CST
 
 ### Added
 - **Copy to clipboard button on code blocks** — each syntax-highlighted code block now shows a "Copy" link in the top-right corner, matching the familiar GitHub code block UX
@@ -151,11 +225,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.4] - 2026-02-17 CST
+## [0.2.4] - 2026-02-17 1941 CST
 
 ### Added
+- **`run.sh`**: Linux/macOS/Git Bash launcher — auto-creates a venv, installs dependencies, and launches MDviewer
 - **`run.ps1`**: Windows PowerShell launcher — auto-creates venv, installs dependencies, and launches MDviewer
-- Complements the existing `run.sh` for Linux/macOS/Git Bash users
+- Complements `run.sh` so every platform has a one-command launcher
 
 ### Documentation
 - `README.md`: Restructured with cleaner Quick Start for all platforms, keyboard shortcuts table, `run.ps1` in project structure
@@ -176,6 +251,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cross-platform: Linux and Windows editors included
 - **Edit → Change Preferred Editor** — Allows changing the saved editor choice at any time
 - New module: `viewer/external_editor.py` — Editor detection, picker dialog, and launcher
+- **Markdown editor detection** — the picker scans system `.desktop` files for apps
+  registered for the `text/markdown` MIME type and lists them first under "Markdown
+  Editors" (Typora, ReText, ghostwriter, etc.), followed by general "Text Editors";
+  duplicates, MDviewer itself, and viewer-only apps are excluded
+
+### Fixed
+- **Change Preferred Editor** now clears the saved choice before re-showing the picker
+  (previously the old preference persisted), and opens the current file in the newly
+  selected editor
+
+### Release Artifacts
+- `MDviewer.exe` attached to the v0.2.3 GitHub release
+
+---
 
 ## [0.2.2] - 2026-02-08 1041 CST
 
@@ -191,11 +280,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Application icon restored** in system menu and system tray — installed multi-resolution PNGs into `~/.local/share/icons/hicolor/` to match the `Icon=mdviewer` reference in the `.desktop` file
+- **Update backups targeted the wrong directory** — `ReleaseDownloader` used
+  `os.getcwd()` as the installation directory, which could be the user's home
+  directory depending on how MDviewer was launched; it now resolves the directory
+  from the module's own path
+- **Update backups aborted on vanishing files** — a safe-copy wrapper now skips files
+  that disappear mid-backup (e.g. browser singleton lock files) instead of aborting
+  the whole backup
+- **`pyqt-app-info` dependency** — `requirements.txt` now installs it from GitHub
+  (`pyqt-app-info[qt] @ git+https://github.com/juren53/pyqt-app-info.git`), since the
+  package is not published on PyPI
+
+### Documentation
+- `REPORT_MDv-update-bug-fix.md`: Bug report for the release-downloader backup issue
+- `PLAN_Non-Git-Update-Support-Implementation.md`: Implementation plan for non-git updates
+- `refresh_icons.sh`: Script to refresh installed Linux icons
+
+---
 
 ## [0.2.1] - 2026-02-03 2145 CST
 
 ### Changed
 - **About dialog** — Replaced inline `AboutDialog` class with the [pyqt-app-info](https://github.com/juren53/pyqt-app-info) package. The new dialog adds execution mode, code location, Python path, and OS details alongside the existing app identity info.
+- `pyqt-app-info` added to `requirements.txt`
+
+### Fixed
+- **AppImage build icon paths** — `build_appimage.sh` copied icons from
+  `../../resources/icons/` although it runs in `appimage_build/` (correct path:
+  `../resources/icons/`), and `mdviewer.png` was missing from the AppDir root, which
+  appimagetool requires to match the desktop file's `Icon=` field
+
+---
 
 ## [0.2.0] - 2026-02-03 2000 CST
 

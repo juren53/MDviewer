@@ -6,6 +6,16 @@ echo  MDviewer Release Script
 echo ============================================
 echo.
 
+REM Always build with the project venv, not whatever pyinstaller is on PATH.
+REM Checked up front so a missing venv aborts before anything is pushed or tagged.
+cd /d "%~dp0"
+set "VENV_PY=%~dp0venv\Scripts\python.exe"
+if not exist "%VENV_PY%" (
+    echo ERROR: Project venv not found at venv\
+    echo Create it with: python -m venv venv
+    exit /b 1
+)
+
 REM --- Step 1: Read version from version.py ---
 for /f "tokens=2 delims==" %%a in ('findstr /R "__version__ =" version.py') do (
     set "RAW=%%a"
@@ -41,9 +51,18 @@ echo.
 
 REM --- Step 4: Build the executable ---
 echo [4/7] Building executable with PyInstaller...
+"%VENV_PY%" -m pip install -q -r requirements.txt pyinstaller
+if errorlevel 1 (
+    echo ERROR: Dependency install failed.
+    exit /b 1
+)
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
-pyinstaller --clean MDviewer.spec
+"%VENV_PY%" -m PyInstaller --clean --noconfirm MDviewer.spec
+if errorlevel 1 (
+    echo ERROR: PyInstaller build failed.
+    exit /b 1
+)
 if not exist dist\MDviewer.exe (
     echo ERROR: Build failed! dist\MDviewer.exe not found.
     exit /b 1
