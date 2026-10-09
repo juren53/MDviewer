@@ -1,11 +1,11 @@
-# Changelog
+# MDviewer Changelog
 
 All notable changes to MDviewer will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## MDviewer [Unreleased]
 
 ### Fixed
 - **`run.ps1` no longer launches with missing dependencies after a failed install** —
@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   install/build fails
 - **`release.bat` builds with the project venv** — same fix as `build.bat`; the venv
   check runs before any push or tag, so a missing venv aborts the release cleanly
+- **`release.bat` release notes were mangled** — the cmd-based CHANGELOG extraction
+  dropped `!` characters and blank lines and broke on lines containing `|`, `<`, or `>`;
+  extraction now uses PowerShell and copies the version's section verbatim
+
+### Changed
+- **CHANGELOG headings include the project name** — title is now "MDviewer Changelog"
+  and version headers use `## MDviewer [X.Y.Z] - YYYY-MM-DD HHMM CST/CDT`, so this
+  changelog is distinguishable from those of other projects; `release.bat` matches the
+  new header format
 
 ### Documentation
 - `README.md`: Added a standalone Windows EXE download option ("no Python needed")
@@ -33,7 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.4] - 2026-06-18 2032 CDT
+## MDviewer [0.3.4] - 2026-06-18 2032 CDT
 
 ### Fixed
 - **PNG and JPEG images now display correctly** — relative image paths in markdown
@@ -44,7 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.3] - 2026-03-25 2014 CDT
+## MDviewer [0.3.3] - 2026-03-25 2014 CDT
 
 ### Fixed
 - **External editor no longer leaves zombie processes** — launching an editor via
@@ -57,7 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.2] - 2026-03-07 1228 CST
+## MDviewer [0.3.2] - 2026-03-07 1228 CST
 
 ### Fixed
 - **Refresh preserves scroll position** — pressing F5 or triggering a refresh no longer
@@ -70,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.1] - 2026-02-27 1002 CST
+## MDviewer [0.3.1] - 2026-02-27 1002 CST
 
 ### Fixed
 - **Startup crash on LMDE/Cinnamon** — App aborted immediately with a fatal GTK error
@@ -96,7 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.3.0] - 2026-02-27 0821 CST
+## MDviewer [0.3.0] - 2026-02-27 0821 CST
 
 ### Added
 - **PDF viewing** — MDviewer can now open and display PDF files natively
@@ -138,7 +147,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.6] - 2026-02-22 1154 CST
+## MDviewer [0.2.6] - 2026-02-22 1154 CST
 
 ### Added
 - **File → Copy FQFN to Clipboard** — Copies the fully-qualified filename of the current document to the system clipboard
@@ -155,7 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5d] - 2026-02-22 1059 CST
+## MDviewer [0.2.5d] - 2026-02-22 1059 CST
 
 ### Added
 - **File → Copy FQFN to Clipboard** — Copies the fully-qualified filename of the current document to the system clipboard
@@ -172,7 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5c] - 2026-02-21 0047 CST
+## MDviewer [0.2.5c] - 2026-02-21 0047 CST
 
 ### Fixed
 - **`compare_versions` treated letter suffixes as pre-releases** — `0.2.5a`/`0.2.5b` were incorrectly ranked below `0.2.5`, causing the update checker to report a spurious update available
@@ -181,7 +190,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5b] - 2026-02-20 1523 CST
+## MDviewer [0.2.5b] - 2026-02-20 1523 CST
 
 ### Fixed
 - **`.desktop` file broken after `run.sh` introduction** — MDviewer was missing from the system menu and system tray
@@ -203,7 +212,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5a] - 2026-02-19 0620 CST
+## MDviewer [0.2.5a] - 2026-02-19 0620 CST
 
 ### Changed
 - **Title bar separator** — window title changed from `MDviewer - filename` to
@@ -211,7 +220,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.5] - 2026-02-18 2327 CST
+## MDviewer [0.2.5] - 2026-02-18 2327 CST
 
 ### Added
 - **Copy to clipboard button on code blocks** — each syntax-highlighted code block now shows a "Copy" link in the top-right corner, matching the familiar GitHub code block UX
@@ -225,7 +234,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.4] - 2026-02-17 1941 CST
+## MDviewer [0.2.4] - 2026-02-17 1941 CST
 
 ### Added
 - **`run.sh`**: Linux/macOS/Git Bash launcher — auto-creates a venv, installs dependencies, and launches MDviewer
@@ -240,7 +249,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.3] - 2026-02-08 1047 CST
+## MDviewer [0.2.3] - 2026-02-08 1047 CST
 
 ### Added
 - **Edit → Open in Editor** (Ctrl+E) — Opens the current document in an external text editor
@@ -266,7 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.2] - 2026-02-08 1041 CST
+## MDviewer [0.2.2] - 2026-02-08 1041 CST
 
 ### Added
 - **File → Info dialog** (Ctrl+I) — Shows detailed metadata for the current document:
@@ -298,7 +307,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.1] - 2026-02-03 2145 CST
+## MDviewer [0.2.1] - 2026-02-03 2145 CST
 
 ### Changed
 - **About dialog** — Replaced inline `AboutDialog` class with the [pyqt-app-info](https://github.com/juren53/pyqt-app-info) package. The new dialog adds execution mode, code location, Python path, and OS details alongside the existing app identity info.
@@ -312,7 +321,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.2.0] - 2026-02-03 2000 CST
+## MDviewer [0.2.0] - 2026-02-03 2000 CST
 
 ### Added
 - **AppImage Support** - Complete Linux AppImage build system for portable distribution
@@ -381,7 +390,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.3a] - 2026-02-03 0758 CST
+## MDviewer [0.1.3a] - 2026-02-03 0758 CST
 
 ### Changed
 - **Project housekeeping** — moved plan, session summary, lessons learned, and utility files into `notes/` directory for a cleaner project root
@@ -396,7 +405,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.3] - 2026-02-03 0006 CST
+## MDviewer [0.1.3] - 2026-02-03 0006 CST
 
 ### Added
 - **Refresh menu item** — View → Refresh (F5) reloads the current document from disk, useful for dynamic or externally-edited markdown files
@@ -406,7 +415,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.2a] - 2026-02-02 2030 CST
+## MDviewer [0.1.2a] - 2026-02-02 2030 CST
 
 ### Fixed
 - **Update checker dialog hangs with QThread error** — the "Get Latest Version" feature would spin endlessly with `QObject::startTimer: Timers can only be used with threads started with QThread`
@@ -416,7 +425,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.2] - 2026-02-02 1509 CST
+## MDviewer [0.1.2] - 2026-02-02 1509 CST
 
 ### Fixed
 - **Blank icons on Linux (LMDE / Cinnamon)** — all icons (app launcher, taskbar, window switcher) were blank after the Icon_Manager_Module integration
@@ -430,7 +439,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.1] - 2026-02-01 1522 CST
+## MDviewer [0.1.1] - 2026-02-01 1522 CST
 
 ### Added
 - **Icon Manager Module integration** — cross-platform icon support via [Icon_Manager_Module](https://github.com/juren53/Icon_Manager_Module)
@@ -449,7 +458,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.1.0] - 2026-01-30 2047 CST
+## MDviewer [0.1.0] - 2026-01-30 2047 CST
 
 ### Added
 - **Open Recent Directories** - Quick access to directories of previously opened files
@@ -493,7 +502,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.9] - 2026-01-30 1840 CST
+## MDviewer [0.0.9] - 2026-01-30 1840 CST
 
 ### Added
 - **Non-Git Update Support** - Automatic updates now work for both git and non-git installations
@@ -536,7 +545,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.8] - 2026-01-30 2230 CST
+## MDviewer [0.0.8] - 2026-01-30 2230 CST
 
 ### Added
 - **Multi-Theme System** - Complete theme architecture overhaul supporting unlimited themes
@@ -571,7 +580,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.7] - 2026-01-29 2215 CST
+## MDviewer [0.0.7] - 2026-01-29 2215 CST
 
 ### Added
 - **Color Settings Preview Column** - Live preview samples next to each color swatch
@@ -584,7 +593,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.6] - 2026-01-29 2044 CST
+## MDviewer [0.0.6] - 2026-01-29 2044 CST
 
 ### Added
 - **Element Color Customization** - Customize colors for key document elements per theme
@@ -606,7 +615,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.5] - 2026-01-25 1645 CST
+## MDviewer [0.0.5] - 2026-01-25 1645 CST
 
 ### Added
 - **Hide Paragraph Marks** - Toggle visibility of paragraph marks in rendered markdown
@@ -637,7 +646,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.4] - 2026-01-25 1120 CST
+## MDviewer [0.0.4] - 2026-01-25 1120 CST
 
 ### Fixed
 - **Update Checker** - Resolved critical issues preventing update detection
@@ -664,7 +673,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.3] - 2026-01-25 0525 CST
+## MDviewer [0.0.3] - 2026-01-25 0525 CST
 
 ### Added
 - **Theme Selection System** - Complete user-accessible theming controls
@@ -688,7 +697,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.2b] - 2026-01-24 2030 CST
+## MDviewer [0.0.2b] - 2026-01-24 2030 CST
 
 ### Added
 - Linux desktop integration
@@ -699,7 +708,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.2] - 2026-01-24 2035 CST
+## MDviewer [0.0.2] - 2026-01-24 2035 CST
 
 ### Added
 - Session restore: reopens last viewed file on startup
@@ -708,7 +717,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [0.0.1] - 2026-01-24 1920 CST
+## MDviewer [0.0.1] - 2026-01-24 1920 CST
 
 ### Added
 - Initial release of MDviewer PyQt6 application

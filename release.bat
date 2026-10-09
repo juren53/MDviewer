@@ -90,17 +90,9 @@ echo.
 REM --- Step 6: Extract changelog and create GitHub Release ---
 echo [6/7] Creating GitHub Release with binary...
 
-REM Extract changelog section for this version into a temp file
-set "FOUND=0"
-(for /f "usebackq delims=" %%L in ("CHANGELOG.md") do (
-    set "LINE=%%L"
-    if !FOUND!==1 (
-        echo !LINE! | findstr /R "^## \[" >nul && goto :done_changelog
-        echo %%L
-    )
-    echo !LINE! | findstr /C:"[%VERSION%]" >nul && set "FOUND=1"
-)) > release_notes_temp.md
-:done_changelog
+REM Extract changelog section for this version into a temp file.
+REM PowerShell copies lines verbatim (cmd's echo mangles !, |, <, > and drops blank lines).
+powershell -NoProfile -Command "$h = '## MDviewer [%VERSION%]'; $in = $false; $out = foreach ($l in Get-Content -Encoding UTF8 '%~dp0CHANGELOG.md') { if ($l -match '^## MDviewer \[') { $in = $l.StartsWith($h) } elseif ($in -and $l -ne '---') { $l } }; [IO.File]::WriteAllLines('%~dp0release_notes_temp.md', [string[]]$out)"
 
 REM Create the release
 gh release create v%VERSION% ^
