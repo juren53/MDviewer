@@ -1,6 +1,6 @@
 # MDviewer
 
-**Version:** v0.2.6 (2026-02-22)
+**Version:** v0.3.4 (2026-06-18)
 
 A PyQt6-based Markdown viewer with GitHub-style rendering, 9 themes, and cross-platform icon support.
 
@@ -52,7 +52,7 @@ cd MDviewer
 
 **Windows (standalone EXE, no Python needed):**
 
-Download [MDviewer.exe (v0.3.0)](https://github.com/juren53/MDviewer/releases/download/v0.3.0/MDviewer.exe) and run it — a single-file executable, no installation required. Windows SmartScreen may warn about an unrecognized app; click **More info → Run anyway**.
+Download [MDviewer.exe (latest release)](https://github.com/juren53/MDviewer/releases/latest/download/MDviewer.exe) and run it — a single-file executable, no installation required. Windows SmartScreen may warn about an unrecognized app; click **More info → Run anyway**.
 
 **Windows from source (PowerShell):**
 ```powershell
